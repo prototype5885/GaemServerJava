@@ -1,4 +1,4 @@
-package org.GaemServer.ClassesShared;
+package ClassesShared;
 
 public class InitialData {
     public int lr;

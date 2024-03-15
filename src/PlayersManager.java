@@ -1,76 +1,85 @@
-
-
-import org.GaemServer.Classes.ConnectedPlayer;
-import org.GaemServer.ClassesShared.ChatMessage;
-import org.GaemServer.ClassesShared.PlayerData;
-import org.GaemServer.ClassesShared.PlayerPosition;
+import Classes.ConnectedPlayer;
+import ClassesShared.ChatMessage;
+import ClassesShared.PlayerData;
+import ClassesShared.PlayerPosition;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 
 public class PlayersManager {
-    public static void ReplicatePlayerPositions(int maxPlayers) throws InterruptedException, IOException {
+
+    private ConnectedPlayer[] connectedPlayers;
+    private Gson gson;
+    private PacketProcessor packetProcessor;
+
+    public PlayersManager(ConnectedPlayer[] connectedPlayers, Gson gson, PacketProcessor packetProcessor) {
+        this.connectedPlayers = connectedPlayers;
+        this.gson = gson;
+        this.packetProcessor = packetProcessor;
+    }
+
+    public void ReplicatePlayerPositions(int maxPlayers) throws InterruptedException, IOException {
         PlayerPosition[] everyPlayersPosition = new PlayerPosition[maxPlayers];
 
         while (true) {
             Thread.sleep(10);
             for (byte i = 0; i < maxPlayers; i++) {
-                if (Server.connectedPlayers[i] == null) {
+                if (connectedPlayers[i] == null) {
                     everyPlayersPosition[i] = null;
                     continue;
                 }
-                everyPlayersPosition[i] = Server.connectedPlayers[i].position;
+                everyPlayersPosition[i] = connectedPlayers[i].position;
             }
-            for (ConnectedPlayer connectedPlayer : Server.connectedPlayers) {
+            for (ConnectedPlayer connectedPlayer : connectedPlayers) {
                 if (connectedPlayer == null) continue;
-                String jsonData = Server.gson.toJson(everyPlayersPosition);
-                PacketProcessor.SendUdp(3, jsonData, connectedPlayer);
+                String jsonData = gson.toJson(everyPlayersPosition);
+                packetProcessor.SendUdp(3, jsonData, connectedPlayer);
             }
 
         }
     }
 
-    public static void CalculatePlayerLatency(ConnectedPlayer connectedPlayer) {
+    public void CalculatePlayerLatency(ConnectedPlayer connectedPlayer) {
 
         Duration duration = Duration.between(connectedPlayer.pingRequestTime, Instant.now());
         connectedPlayer.latency = duration.getNano();
     }
 
-    public static void SendChatMessageToEveryone(ConnectedPlayer messageSenderPlayer, String message) {
+    public void SendChatMessageToEveryone(ConnectedPlayer messageSenderPlayer, String message) {
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.i = messageSenderPlayer.index;
         chatMessage.m = message;
 
-        String jsonData = Server.gson.toJson(chatMessage);
-        for (ConnectedPlayer player : Server.connectedPlayers) {
+        String jsonData = gson.toJson(chatMessage);
+        for (ConnectedPlayer player : connectedPlayers) {
             if (player == null) continue;
-            PacketProcessor.SendTcp(2, jsonData, player);
+            packetProcessor.SendTcp(2, jsonData, player);
         }
     }
 
-    public static void SendPlayerDataToEveryone(int maxPlayers) {
-        String jsonData = Server.gson.toJson(GetDataOfEveryConnectedPlayer(maxPlayers));
-        for (ConnectedPlayer player : Server.connectedPlayers) {
+    public void SendPlayerDataToEveryone(int maxPlayers) {
+        String jsonData = gson.toJson(GetDataOfEveryConnectedPlayer(maxPlayers));
+        for (ConnectedPlayer player : connectedPlayers) {
             if (player == null) continue;
         }
     }
 
-    public static PlayerData[] GetDataOfEveryConnectedPlayer(int maxPlayers) {
+    public PlayerData[] GetDataOfEveryConnectedPlayer(int maxPlayers) {
         PlayerData[] playerDataArray = new PlayerData[maxPlayers];
         for (byte i = 0; i < maxPlayers; i++) {
-            if (Server.connectedPlayers[i] != null) {
+            if (connectedPlayers[i] != null) {
                 playerDataArray[i] = GetDataOfConnectedPlayer(i);
             }
         }
         return playerDataArray;
     }
 
-    public static PlayerData GetDataOfConnectedPlayer(byte index) {
+    public PlayerData GetDataOfConnectedPlayer(byte index) {
         PlayerData playerData = new PlayerData();
         playerData.i = index;
-        playerData.un = Server.connectedPlayers[index].playerName;
+        playerData.un = connectedPlayers[index].playerName;
 
         return playerData;
     }

@@ -1,4 +1,4 @@
-package org.GaemServer.ClassesShared;
+package ClassesShared;
 
 public class PlayerData {
     public int i;

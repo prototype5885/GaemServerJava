@@ -1,4 +1,4 @@
-package org.GaemServer.Classes;
+package Classes;
 
 import java.net.Socket;
 

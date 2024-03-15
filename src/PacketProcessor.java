@@ -1,42 +1,57 @@
+import Classes.ConnectedPlayer;
+import Classes.Packet;
+import ClassesShared.PlayerPosition;
+import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.GaemServer.Classes.ConnectedPlayer;
-import org.GaemServer.Classes.Packet;
-import org.GaemServer.ClassesShared.PlayerPosition;
 
 public class PacketProcessor {
-    public static void SendTcp(int commandType, String message, ConnectedPlayer connectedPlayer) {
+    private DatagramSocket udpServerSocket;
+    private Gson gson;
+    private ConnectedPlayer[] connectedPlayers;
+    private Encryption encryption;
+
+
+    public PacketProcessor(ConnectedPlayer[] connectedPlayers, Gson gson, DatagramSocket udpServerSocket, Encryption encryption) {
+        this.udpServerSocket = udpServerSocket;
+        this.gson = gson;
+        this.connectedPlayers = connectedPlayers;
+        this.encryption = encryption;
+    }
+
+    public void SendTcp(int commandType, String message, ConnectedPlayer connectedPlayer) {
         try {
             byte[] messageBytes = EncodeMessage(commandType, message);
             // Monitoring here
             connectedPlayer.outputStream.write(messageBytes);
         } catch (Exception ex) {
-            System.out.println("Failed sending TCP data");
+            System.out.println(ex.getMessage());
         }
     }
 
-    public static void SendUdp(int commandType, String message, ConnectedPlayer connectedPlayer) throws IOException {
-        if (connectedPlayer.udpPort != 0) {
+    public void SendUdp(int commandType, String message, ConnectedPlayer connectedPlayer) {
+        try {
+            if (connectedPlayer.udpPort == 0) return;
             byte[] messageBytes = EncodeMessage(commandType, message);
             // Monitoring here
             DatagramPacket udpPacket = new DatagramPacket(messageBytes, messageBytes.length, connectedPlayer.ipAddress, connectedPlayer.udpPort);
-            Server.udpServerSocket.send(udpPacket);
+            udpServerSocket.send(udpPacket);
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
         }
-
     }
 
-    public static void ReceiveTcpData(ConnectedPlayer connectedPlayer) {
-        try {
-            System.out.printf("(%s) Waiting for Tcp data from client %s:%s %n", LocalDateTime.now(), connectedPlayer.ipAddress, connectedPlayer.tcpPort);
 
+    public void ReceiveTcpData(ConnectedPlayer connectedPlayer) {
+        try {
             byte[] buffer = new byte[1024];
             while (true) {
                 int bytesRead = connectedPlayer.inputStream.read(buffer);
@@ -45,38 +60,44 @@ public class PacketProcessor {
                 List<Packet> packets = ProcessBuffer(buffer, bytesRead);
                 ProcessPackets(packets, connectedPlayer);
             }
-//            connectedPlayer.tcpClientSocket.close();
-//            System.out.println("Client disconnected: " + connectedPlayer.ipAddress + ":" + connectedPlayer.tcpPort);
-        } catch (Exception e) {
-            System.out.println(e);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
     }
 
-    public static void ReceiveUdpData() {
+    public void ReceiveUdpData() {
         try {
             while (true) {
                 byte[] buffer = new byte[1024];
                 DatagramPacket udpPacket = new DatagramPacket(buffer, buffer.length);
-                Server.udpServerSocket.receive(udpPacket);
+                udpServerSocket.receive(udpPacket);
 
-                ConnectedPlayer connectedPlayer = Authentication.CheckAuthenticationOfUdpClient(udpPacket.getAddress(), udpPacket.getPort());
-                if (connectedPlayer != null) {
+                ConnectedPlayer connectedPlayer = null;
+                for (ConnectedPlayer player : connectedPlayers) { // check authentication of sender, rejects packet if not actual connected player
+                    if (player == null) continue;
+                    if (player.ipAddress.equals(udpPacket.getAddress())) {
+                        if (player.udpPort == 0) // this runs if sender is an actual player, but havent sent udp packet before
+                            player.udpPort = udpPacket.getPort();
+                        connectedPlayer = player;
+                    }
+                }
+                if (connectedPlayer != null) { // runs if sender is a connected players
                     List<Packet> packets = ProcessBuffer(udpPacket.getData(), udpPacket.getLength());
                     ProcessPackets(packets, connectedPlayer);
                 }
             }
         } catch (Exception ex) {
-            System.out.println("Error receiving UDP packet");
+            System.out.println(ex.getMessage());
         }
     }
 
-    public static List<Packet> ProcessBuffer(byte[] buffer, int byteLength) {
+    public List<Packet> ProcessBuffer(byte[] buffer, int byteLength) {
         String receivedBytesInString;
 
-        if (Encryption.encryption) {
+        if (encryption.encryptionEnabled) {
             byte[] receivedBytes = new byte[byteLength];
             System.arraycopy(buffer, 0, receivedBytes, 0, byteLength);
-            receivedBytesInString = Encryption.Decrypt(receivedBytes);
+            receivedBytesInString = encryption.Decrypt(receivedBytes);
         } else {
             receivedBytesInString = new String(buffer, StandardCharsets.UTF_8);
         }
@@ -105,13 +126,13 @@ public class PacketProcessor {
         return packets;
     }
 
-    private static void ProcessPackets(List<Packet> packets, ConnectedPlayer connectedPlayer) {
+    private void ProcessPackets(List<Packet> packets, ConnectedPlayer connectedPlayer) {
         for (Packet packet : packets) {
             ProcessDataSentByPlayer(packet, connectedPlayer);
         }
     }
 
-    private static void ProcessDataSentByPlayer(Packet packet, ConnectedPlayer connectedPlayer) {
+    private void ProcessDataSentByPlayer(Packet packet, ConnectedPlayer connectedPlayer) {
         switch (packet.type) {
             case 0:
                 connectedPlayer.udpPingAnswered = true;
@@ -119,18 +140,18 @@ public class PacketProcessor {
                 // Calculate latency here
                 break;
             case 2:
-                PlayersManager.SendChatMessageToEveryone(connectedPlayer, packet.data);
+//                playersManager.SendChatMessageToEveryone(connectedPlayer, packet.data);
                 break;
             case 3:
-                connectedPlayer.position = Server.gson.fromJson(packet.data, PlayerPosition.class);
+                connectedPlayer.position = gson.fromJson(packet.data, PlayerPosition.class);
                 break;
         }
     }
 
-    private static byte[] EncodeMessage(int commandType, String message) {
-        if (Encryption.encryption) {
+    private byte[] EncodeMessage(int commandType, String message) {
+        if (encryption.encryptionEnabled) {
             String messageString = "#" + commandType + "#" + "$" + message + "$";
-            return Encryption.Encrypt(messageString);
+            return encryption.Encrypt(messageString);
         } else {
             return ("#" + commandType + "#" + "$" + message + "$").getBytes();
         }

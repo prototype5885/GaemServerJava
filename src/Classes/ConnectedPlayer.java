@@ -1,16 +1,14 @@
-package org.GaemServer.Classes;
+package Classes;
 
-import org.GaemServer.ClassesShared.PlayerPosition;
+import ClassesShared.PlayerPosition;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
-public class ConnectedPlayer
-{
+public class ConnectedPlayer {
     public int index;
     public int databaseID;
     public String playerName;
@@ -27,8 +25,7 @@ public class ConnectedPlayer
     public int latency;
     public PlayerPosition position;
 
-    public ConnectedPlayer()
-    {
+    public ConnectedPlayer() {
         databaseID = -1;
         udpPingAnswered = true;
         timeUntilTimeout = 10;
@@ -37,153 +34,123 @@ public class ConnectedPlayer
     }
 
 
-    public int getDatabaseID()
-    {
+    public int getDatabaseID() {
         return databaseID;
     }
 
-    public void setDatabaseID(int databaseID)
-    {
+    public void setDatabaseID(int databaseID) {
         this.databaseID = databaseID;
     }
 
-    public String getPlayerName()
-    {
+    public String getPlayerName() {
         return playerName;
     }
 
-    public void setPlayerName(String playerName)
-    {
+    public void setPlayerName(String playerName) {
         this.playerName = playerName;
     }
 
-    public Socket getTcpClientSocket()
-    {
+    public Socket getTcpClientSocket() {
         return tcpClientSocket;
     }
 
-    public void setTcpClientSocket(Socket tcpClientSocket)
-    {
+    public void setTcpClientSocket(Socket tcpClientSocket) {
         this.tcpClientSocket = tcpClientSocket;
     }
 
-    public InputStream getInputStream()
-    {
+    public InputStream getInputStream() {
         return inputStream;
     }
 
-    public void setInputStream(InputStream inputStream)
-    {
+    public void setInputStream(InputStream inputStream) {
         this.inputStream = inputStream;
     }
 
-    public OutputStream getOutputStream()
-    {
+    public OutputStream getOutputStream() {
         return outputStream;
     }
 
-    public void setOutputStream(OutputStream outputStream)
-    {
+    public void setOutputStream(OutputStream outputStream) {
         this.outputStream = outputStream;
     }
 
-    public InetAddress getIpAddress()
-    {
+    public InetAddress getIpAddress() {
         return ipAddress;
     }
 
-    public void setIpAddress(InetAddress ipAddress)
-    {
+    public void setIpAddress(InetAddress ipAddress) {
         this.ipAddress = ipAddress;
     }
 
-    public int getTcpPort()
-    {
+    public int getTcpPort() {
         return tcpPort;
     }
 
-    public void setTcpPort(int tcpPort)
-    {
+    public void setTcpPort(int tcpPort) {
         this.tcpPort = tcpPort;
     }
 
-    public int getUdpPort()
-    {
+    public int getUdpPort() {
         return udpPort;
     }
 
-    public void setUdpPort(int udpPort)
-    {
+    public void setUdpPort(int udpPort) {
         this.udpPort = udpPort;
     }
 
-    public byte getStatus()
-    {
+    public byte getStatus() {
         return status;
     }
 
-    public void setStatus(byte status)
-    {
+    public void setStatus(byte status) {
         this.status = status;
     }
 
-    public boolean isUdpPingAnswered()
-    {
+    public boolean isUdpPingAnswered() {
         return udpPingAnswered;
     }
 
-    public void setUdpPingAnswered(boolean udpPingAnswered)
-    {
+    public void setUdpPingAnswered(boolean udpPingAnswered) {
         this.udpPingAnswered = udpPingAnswered;
     }
 
-    public byte getTimeUntilTimeout()
-    {
+    public byte getTimeUntilTimeout() {
         return timeUntilTimeout;
     }
 
-    public void setTimeUntilTimeout(byte timeUntilTimeout)
-    {
+    public void setTimeUntilTimeout(byte timeUntilTimeout) {
         this.timeUntilTimeout = timeUntilTimeout;
     }
 
-    public int getLatency()
-    {
+    public int getLatency() {
         return latency;
     }
 
-    public void setLatency(int latency)
-    {
+    public void setLatency(int latency) {
         this.latency = latency;
     }
 
-    public PlayerPosition getPosition()
-    {
+    public PlayerPosition getPosition() {
         return position;
     }
 
-    public void setPosition(PlayerPosition position)
-    {
+    public void setPosition(PlayerPosition position) {
         this.position = position;
     }
 
-    public void setPingRequestTime(Instant pingRequestTime)
-    {
+    public void setPingRequestTime(Instant pingRequestTime) {
         this.pingRequestTime = pingRequestTime;
     }
 
-    public int getIndex()
-    {
+    public int getIndex() {
         return index;
     }
 
-    public void setIndex(int index)
-    {
+    public void setIndex(int index) {
         this.index = index;
     }
 
-    public Instant getPingRequestTime()
-    {
+    public Instant getPingRequestTime() {
         return pingRequestTime;
     }
 }

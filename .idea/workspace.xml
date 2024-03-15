@@ -9,7 +9,31 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1fb1a21c-28d4-4058-b743-d46f937a3aed" name="Changes" comment="" />
+    <list default="true" id="1fb1a21c-28d4-4058-b743-d46f937a3aed" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/h2database_h2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/GaemServerJava_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/GaemServerJava_jar.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/xerial_sqlite_jdbc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GaemServerJava.iml" beforeDir="false" afterPath="$PROJECT_DIR$/GaemServerJava.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Authentication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Authentication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Classes/AuthenticationResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Classes/AuthenticationResult.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Classes/ConnectedPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Classes/ConnectedPlayer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Classes/Packet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Classes/Packet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ClassesShared/ChatMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/ChatMessage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ClassesShared/InitialData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/InitialData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ClassesShared/LoginData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/LoginData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ClassesShared/PlayerData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/PlayerData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ClassesShared/PlayerPosition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/PlayerPosition.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Database.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Database.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Encryption.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Encryption.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PacketProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PacketProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PlayersManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PlayersManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -22,6 +46,12 @@
       </list>
     </option>
   </component>
+  <component name="FormatOnSaveOptions">
+    <option name="myRunOnSave" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -32,19 +62,22 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Application.GaemServer.executor": "Run",
+    "Application.GaemServer.executor": "Debug",
     "Downloaded.Files.Path.Enabled": "false",
     "Repository.Attach.Annotations": "false",
     "Repository.Attach.JavaDocs": "true",
     "Repository.Attach.Sources": "false",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "Q:/SDK/Coding/Java/GaemServerJava/lib/slf4j-api-1.7.36.jar",
-    "project.structure.last.edited": "Artifacts",
+    "project.structure.last.edited": "Libraries",
     "project.structure.proportion": "0.15820312",
-    "project.structure.side.proportion": "0.2"
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
 }]]></component>
   <component name="RunManager">
