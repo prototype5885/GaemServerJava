@@ -3,7 +3,6 @@ import Classes.ConnectedPlayer;
 import Classes.Packet;
 import ClassesShared.InitialData;
 import ClassesShared.LoginData;
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,23 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Authentication {
-    private final ConnectedPlayer[] connectedPlayers;
-    private final PacketProcessor packetProcessor;
-    private final Gson gson;
-    private final PlayersManager playersManager;
-    private ServerSocket tcpServerSocket;
-    private int maxPlayers;
-    private int tickRate;
-
-    public Authentication(ConnectedPlayer[] connectedPlayers, Gson gson, PacketProcessor packetProcessor, PlayersManager playersManager, ServerSocket tcpServerSocket, int maxPlayers, int tickRate) {
-        this.connectedPlayers = connectedPlayers;
-        this.packetProcessor = packetProcessor;
-        this.gson = gson;
-        this.playersManager = playersManager;
-        this.tcpServerSocket = tcpServerSocket;
-        this.maxPlayers = maxPlayers;
-        this.tickRate = tickRate;
-    }
 
     public ConnectedPlayer HandleNewConnections() {
         try {
@@ -65,10 +47,10 @@ public class Authentication {
 
             // adds the new player to the list of connected players
             connectedPlayer = AddNewPlayerToPlayerList(authenticationResult);
-            connectedPlayers[authenticationResult.slotIndex] = connectedPlayer;
+            Main.connectedPlayers[authenticationResult.slotIndex] = connectedPlayer;
 
             // reply back to the player about the authentication success
-            InitialData initialData = PlayerAccepted(authenticationResult, maxPlayers, tickRate);
+            InitialData initialData = PlayerAccepted(authenticationResult, Main.maxPlayers, Main.tickRate);
             SendResponseToPlayer(connectedPlayer, initialData);
 
             return connectedPlayer;
@@ -82,7 +64,7 @@ public class Authentication {
     public Socket WaitForPlayerToConnect() {
         try {
             System.out.println("Waiting for a player to connect...");
-            Socket tcpClientSocket = tcpServerSocket.accept();
+            Socket tcpClientSocket = Main.tcpServerSocket.accept();
             return tcpClientSocket;
 
         } catch (Exception ex) {
@@ -93,32 +75,36 @@ public class Authentication {
     public int FindFreeSlotForConnectingPlayer() {
         System.out.println("New player is connecting, searching for a free slot...");
         int freeSlotIndex = 0;
-        for (ConnectedPlayer connectedPlayer : connectedPlayers) {
+        for (ConnectedPlayer connectedPlayer : Main.connectedPlayers) {
             if (connectedPlayer == null) {
                 System.out.printf("Assigned slot id %s to connecting player, continuing to authenticate based on login data received%n", freeSlotIndex);
                 return freeSlotIndex;
             } else {
                 freeSlotIndex++;
             }
-            if (freeSlotIndex > maxPlayers - 1) {
+            if (freeSlotIndex > Main.maxPlayers - 1) {
                 break;
             }
         }
         return -1;
     }
 
-    public AuthenticationResult AuthenticateConnectingPlayer(Socket tcpClientSocket, int freeSlotIndex) throws IOException, InterruptedException, IllegalAccessException, NoSuchFieldException, InstantiationException {
+    public AuthenticationResult AuthenticateConnectingPlayer(Socket tcpClientSocket, int freeSlotIndex) throws IOException {
         byte[] buffer = new byte[512];
         int bytesRead = tcpClientSocket.getInputStream().read(buffer);
+
         byte[] receivedBytes = new byte[bytesRead];
         System.arraycopy(buffer, 0, receivedBytes, 0, bytesRead);
-        List<Packet> packets = packetProcessor.ProcessBuffer(receivedBytes, bytesRead);
+
+        String receivedBytesInString = ProcessPacket.Decode(receivedBytes);
+        List<Packet> packets = ProcessPacket.SeparatePackets(receivedBytesInString);
+
         // Monitoring.receivedBytesPerSecond += bytesRead;
 
         AuthenticationResult authenticationResult = new AuthenticationResult();
         for (Packet packet : packets) {
             if (packet.type == 1) {
-                LoginData loginData = gson.fromJson(packet.data, LoginData.class);
+                LoginData loginData = Main.gson.fromJson(packet.data, LoginData.class);
 //                System.out.printf("(%s) Login data has arrived from player %s%n", LocalDateTime.now(), loginData.un);
 
                 if (loginData.lr) // Runs if client wants to log in
@@ -155,7 +141,7 @@ public class Authentication {
         connectedPlayer.tcpPort = authenticationResult.tcpClientSocket.getPort();
         connectedPlayer.playerName = authenticationResult.playerName;
 
-        connectedPlayers[authenticationResult.slotIndex] = connectedPlayer;
+        Main.connectedPlayers[authenticationResult.slotIndex] = connectedPlayer;
 
         System.out.println("Added new player to the list of connected players");
         return connectedPlayer;
@@ -167,7 +153,7 @@ public class Authentication {
         initialData.i = authenticationResult.slotIndex;
         initialData.mp = maxPlayers;
         initialData.tr = tickRate;
-        initialData.pda = playersManager.GetDataOfEveryConnectedPlayer(maxPlayers);
+        initialData.pda = PlayersManager.GetDataOfEveryConnectedPlayer(maxPlayers);
 
         System.out.println("Player was accepted successfully");
         return initialData;
@@ -191,8 +177,8 @@ public class Authentication {
     }
 
     public void SendResponseToPlayer(ConnectedPlayer connectedPlayer, InitialData initialData) throws IOException, InterruptedException {
-        String jsonData = gson.toJson(initialData);
-        packetProcessor.SendTcp(1, jsonData, connectedPlayer);
+        String jsonData = Main.gson.toJson(initialData);
+        SendPacket.SendTcp(1, jsonData, connectedPlayer);
         System.out.println("Initial data has been sent to player.");
         if (initialData.lr != 1) {
             Thread.sleep(1000);
@@ -205,8 +191,8 @@ public class Authentication {
 
         System.out.println("Player %s was disconnected.");
 
-        int index = Arrays.binarySearch(connectedPlayers, connectedPlayer);
-        connectedPlayers[index] = null;
+        int index = Arrays.binarySearch(Main.connectedPlayers, connectedPlayer);
+        Main.connectedPlayers[index] = null;
 
     }
 }

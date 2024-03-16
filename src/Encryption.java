@@ -5,16 +5,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 public class Encryption {
-    private String keystring = "0123456789ABCDEF0123456789ABCDEF";
-    private final byte ivLength = 16;
-    private byte[] encryptionKey;
-    public boolean encryptionEnabled = true;
+    private static final byte ivLength = 16;
+    public static byte[] encryptionKey;
+    public static boolean encryptionEnabled = true;
 
-    public Encryption() {
-        encryptionKey = keystring.getBytes(StandardCharsets.UTF_8);
-    }
 
-    public String Decrypt(byte[] encryptedMessageWithIV) {
+    public static String Decrypt(byte[] encryptedMessageWithIV) {
         try {
             // reads the first 16 bytes as IV
             byte[] extractedIV = new byte[ivLength];
@@ -36,7 +32,7 @@ public class Encryption {
         }
     }
 
-    public byte[] Encrypt(String message) {
+    public static byte[] Encrypt(String message) {
         try {
             // creates a random IV byte array
             byte[] randomIV = new byte[ivLength];

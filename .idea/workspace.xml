@@ -10,29 +10,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1fb1a21c-28d4-4058-b743-d46f937a3aed" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/h2database_h2.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/GaemServerJava_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/GaemServerJava_jar.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/xerial_sqlite_jdbc.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Classes/ConfigFileContent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ConfigFile.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ProcessPacket.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ReceivePacket.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/SendPacket.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GaemServerJava.iml" beforeDir="false" afterPath="$PROJECT_DIR$/GaemServerJava.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Authentication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Authentication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Classes/AuthenticationResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Classes/AuthenticationResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Classes/ConnectedPlayer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Classes/ConnectedPlayer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Classes/Packet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Classes/Packet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ClassesShared/ChatMessage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/ChatMessage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ClassesShared/InitialData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/InitialData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ClassesShared/LoginData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/LoginData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ClassesShared/PlayerData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/PlayerData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ClassesShared/PlayerPosition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClassesShared/PlayerPosition.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Database.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Database.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Encryption.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Encryption.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PacketProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PacketProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/PacketProcessor.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PlayersManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PlayersManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,6 +39,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/Main.java" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
