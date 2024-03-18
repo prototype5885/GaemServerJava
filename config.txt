@@ -1,4 +1,0 @@
-tcpPort=1942
-tickRate=10
-maxPlayers=10
-encryptionKey=0123456789ABCDEF0123456789ABCDEF
