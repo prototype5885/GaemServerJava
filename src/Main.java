@@ -1,13 +1,11 @@
 import Classes.ConfigFileContent;
 import Classes.ConnectedPlayer;
 import com.google.gson.Gson;
-import org.h2.tools.Server;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 public class Main {
     public static final Gson gson = new Gson();
@@ -20,6 +18,7 @@ public class Main {
     public static final ConnectedPlayer[] connectedPlayers;
     public static final Database database = new Database();
 
+    // reads config file and parses content
     static {
         ConfigFileContent configFileContent = ConfigFile.readConfigFile();
 
@@ -39,8 +38,8 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        database.AddPlayer("User", "testpassword");
+    public static void main(String[] args) {
+//        database.AddPlayer("User", "testpassword");
 
         new Thread(ReceivePacket::ReceiveUdpPacket).start(); // starts thread that listens to incoming udp connections from anyone
         new Thread(SendPacket::SendPlayerPositions).start(); // starts thread that sends the current player positions to each player
@@ -49,7 +48,7 @@ public class Main {
         Authentication authentication = new Authentication(); // handles authentication of connecting client
         while (true) {
             ConnectedPlayer connectedPlayer = authentication.HandleNewConnections();
-            if (connectedPlayer != null) {
+            if (connectedPlayer != null) { // runs if the authentication of connecting player was successful
                 new Thread(() -> ReceivePacket.ReceiveTcpPacket(connectedPlayer)).start();
             }
         }

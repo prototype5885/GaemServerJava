@@ -10,17 +10,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1fb1a21c-28d4-4058-b743-d46f937a3aed" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Classes/ConfigFileContent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ConfigFile.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ProcessPacket.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ReceivePacket.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/SendPacket.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/google_code_gson.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/google_code_gson.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/h2database_h2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/h2database_h2.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Authentication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Authentication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Encryption.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Encryption.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PacketProcessor.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/PlayersManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PlayersManager.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,8 +57,8 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "Q:/SDK/Coding/Java/GaemServerJava/lib/slf4j-api-1.7.36.jar",
-    "project.structure.last.edited": "Libraries",
+    "last_opened_file_path": "Q:/Coding/Java/GaemServerJava",
+    "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15820312",
     "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "preferences.pluginManager"
