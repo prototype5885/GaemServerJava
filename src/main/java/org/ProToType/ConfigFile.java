@@ -1,63 +1,100 @@
 package org.ProToType;
 
-import org.ProToType.Classes.ConfigFileContent;
+import org.ProToType.Static.PrintWithTime;
 
 import java.io.*;
 
 public class ConfigFile {
-    public static ConfigFileContent readConfigFile() {
-        ConfigFileContent configFileContent = new ConfigFileContent();
+    private final String tcpPortString = "tcpPort";
+    private final String tickRateString = "tickRate";
+    private final String maxPlayersString = "maxPlayers";
+    private final String encryptionKeyString = "encryptionKey";
+    private final String localDatabaseString = "localDatabase";
+    private final String remoteDatabaseIpAddressString = "remoteDatabaseIpAddress";
+    private final String remoteDatabasePortString = "remoteDatabasePort";
+    private final String dbUsernameString = "dbUsername";
+    private final String dbPasswordString = "dbPassword";
+
+    public int tcpPort;
+    public int tickRate;
+    public int maxPlayers;
+    public String encryptionKey;
+    public boolean localDatabase;
+    public String remoteDatabaseIpAddress;
+    public String remoteDatabasePort;
+    public String dbUsername;
+    public String dbPassword;
+
+
+    public ConfigFile() throws IOException {
         String configFilename = "config.txt";
         File configFile = new File(configFilename);
 
         // runs if config file doesn't exist
         if (!configFile.exists()) {
-            System.out.println("Config file doesn't exist, creating new...");
+            PrintWithTime.Print("Config file doesn't exist, creating new...");
 
-            try {
-                configFile.createNewFile();
-                FileWriter writer = new FileWriter(configFilename);
-                writer.write("tcpPort=1942\n");
-                writer.write("tickRate=10\n");
-                writer.write("maxPlayers=10\n");
-                writer.write("encryptionKey=0123456789ABCDEF0123456789ABCDEF\n");
-                writer.close();
-                System.out.println("Config file created");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            configFile.createNewFile();
+            FileWriter writer = new FileWriter(configFilename);
+
+            writer.write(FormatConfig(tcpPortString, String.valueOf(1942)));
+            writer.write(FormatConfig(tickRateString, String.valueOf(10)));
+            writer.write(FormatConfig(maxPlayersString, String.valueOf(10)));
+            writer.write(FormatConfig(encryptionKeyString, "0123456789ABCDEF0123456789ABCDEF"));
+            writer.write(FormatConfig(localDatabaseString, String.valueOf(true)));
+            writer.write(FormatConfig(remoteDatabaseIpAddressString, "127.0.0.1"));
+            writer.write(FormatConfig(remoteDatabasePortString, String.valueOf(3306)));
+            writer.write(FormatConfig(dbUsernameString, "username"));
+            writer.write(FormatConfig(dbPasswordString, "password"));
+
+            writer.close();
+            PrintWithTime.Print("Config file created");
+
         }
 
         // runs if or when config file exists
         String line;
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(configFile));
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("=");
-                if (parts.length == 2) {
-                    String key = parts[0].trim();
-                    switch (key) {
-                        case "tcpPort":
-                            configFileContent.tcpPort = Integer.parseInt(parts[1].trim());
-                            break;
-                        case "tickRate":
-                            configFileContent.tickRate = Integer.parseInt(parts[1].trim());
-                            break;
-                        case "maxPlayers":
-                            configFileContent.maxPlayers = Integer.parseInt(parts[1].trim());
-                            break;
-                        case "encryptionKey":
-                            configFileContent.encryptionKey = parts[1].trim();
-                            break;
-                    }
 
+        BufferedReader reader = new BufferedReader(new FileReader(configFile));
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("=");
+            if (parts.length == 2) {
+                String key = parts[0].trim();
+                switch (key) {
+                    case tcpPortString:
+                        tcpPort = Integer.parseInt(parts[1].trim());
+                        break;
+                    case tickRateString:
+                        tickRate = Integer.parseInt(parts[1].trim());
+                        break;
+                    case maxPlayersString:
+                        maxPlayers = Integer.parseInt(parts[1].trim());
+                        break;
+                    case encryptionKeyString:
+                        encryptionKey = parts[1].trim();
+                        break;
+                    case localDatabaseString:
+                        localDatabase = Boolean.parseBoolean(parts[1].trim());
+                        break;
+                    case remoteDatabaseIpAddressString:
+                        remoteDatabaseIpAddress = parts[1].trim();
+                        break;
+                    case remoteDatabasePortString:
+                        remoteDatabasePort = parts[1].trim();
+                    case dbUsernameString:
+                        dbUsername = parts[1].trim();
+                        break;
+                    case dbPasswordString:
+                        dbPassword = parts[1].trim();
+                        break;
                 }
             }
-            reader.close();
-            System.out.println("Config file read");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-        return configFileContent;
+        reader.close();
+        System.out.println("Config file read");
+    }
+
+    private String FormatConfig(String name, String value) {
+        return name + "=" + value + "\n";
     }
 }

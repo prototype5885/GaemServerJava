@@ -5,9 +5,9 @@ import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Classes.Packet;
 import org.ProToType.ClassesShared.InitialData;
 import org.ProToType.ClassesShared.LoginData;
+import org.ProToType.Static.PrintWithTime;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -20,15 +20,15 @@ public class Authentication {
             // waits for a player to connect
             Socket tcpClientSocket = WaitForPlayerToConnect();
             if (tcpClientSocket == null) {
-                System.out.printf("(%s) Error while accepting new client%n", LocalDateTime.now());
+                PrintWithTime.Print("Error while accepting new client");
                 return null;
             }
 
             // find which player slot is free, if server is full then return -1
             ConnectedPlayer connectedPlayer;
             int slotIndex = FindFreeSlotForConnectingPlayer();
-            if (slotIndex == -1) // runs if server is full
-            {
+
+            if (slotIndex == -1) { // runs if server is full
                 InitialData initialData = PlayerRejected(tcpClientSocket, 7); // result 7 means server is full
                 connectedPlayer = new ConnectedPlayer();
                 connectedPlayer.tcpClientSocket = tcpClientSocket;
@@ -38,6 +38,9 @@ public class Authentication {
 
             // continue the authentication using the login data the player has sent during connection
             AuthenticationResult authenticationResult = AuthenticateConnectingPlayer(tcpClientSocket, slotIndex);
+
+            if (authenticationResult == null) // runs if there was an issue with receiving login data from the client
+                return null;
 
             if (authenticationResult.result != 1) { // runs if authentication failed for any reason
                 InitialData initialData = PlayerRejected(tcpClientSocket, authenticationResult.result);
@@ -56,22 +59,16 @@ public class Authentication {
             SendResponseToPlayer(connectedPlayer, initialData);
 
             return connectedPlayer;
-
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
             return null;
         }
     }
 
-    public Socket WaitForPlayerToConnect() {
-        try {
-            System.out.println("Waiting for a player to connect...");
-            Socket tcpClientSocket = Main.tcpServerSocket.accept();
-            return tcpClientSocket;
-
-        } catch (Exception ex) {
-            return null;
-        }
+    public Socket WaitForPlayerToConnect() throws IOException {
+        System.out.println("Waiting for a player to connect...");
+        Socket tcpClientSocket = Main.tcpServerSocket.accept();
+        return tcpClientSocket;
     }
 
     public int FindFreeSlotForConnectingPlayer() {
@@ -92,8 +89,11 @@ public class Authentication {
     }
 
     public AuthenticationResult AuthenticateConnectingPlayer(Socket tcpClientSocket, int freeSlotIndex) throws IOException {
+
         byte[] buffer = new byte[512];
+
         int bytesRead = tcpClientSocket.getInputStream().read(buffer);
+
 
         byte[] receivedBytes = new byte[bytesRead];
         System.arraycopy(buffer, 0, receivedBytes, 0, bytesRead);
@@ -109,14 +109,11 @@ public class Authentication {
                 LoginData loginData = Main.gson.fromJson(packet.data, LoginData.class);
 //                System.out.printf("(%s) Login data has arrived from player %s%n", LocalDateTime.now(), loginData.un);
 
-                if (loginData.lr) // Runs if client wants to log in
-                {
+                if (loginData.lr) { // Runs if client wants to log in
 //                    authenticationResult = Database.LoginUser(username, hashedPassword, Server.connectedPlayers);
-                } else // Runs if client wants to register
-                {
+                } else { // Runs if client wants to register
 //                    authenticationResult = Database.RegisterUser(username, hashedPassword);
-                    if (authenticationResult.result == 1) // runs if registration was successful
-                    {
+                    if (authenticationResult.result == 1) { // runs if registration was successful
 //                        authenticationResult = Database.LoginUser(username, hashedPassword, Server.connectedPlayers);
                     }
                 }

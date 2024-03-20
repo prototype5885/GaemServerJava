@@ -3,9 +3,16 @@ package org.ProToType;
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.ClassesShared.ChatMessage;
 import org.ProToType.ClassesShared.PlayerPosition;
+import org.ProToType.Static.Encryption;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 public class SendPacket {
     public static void SendTcp(int commandType, String message, ConnectedPlayer connectedPlayer) {
@@ -25,8 +32,8 @@ public class SendPacket {
             // Monitoring here
             DatagramPacket udpPacket = new DatagramPacket(messageBytes, messageBytes.length, connectedPlayer.ipAddress, connectedPlayer.udpPort);
             Main.udpServerSocket.send(udpPacket);
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
         }
     }
 
