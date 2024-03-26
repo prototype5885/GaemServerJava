@@ -1,15 +1,16 @@
 package org.ProToType;
 
 import com.google.gson.Gson;
-import org.ProToType.Classes.ConnectedPlayer;
-import org.ProToType.Static.Encryption;
-import org.ProToType.Static.PrintWithTime;
+import org.ProToType.Static.*;
 import org.ProToType.Threaded.ReceiveTcpPacket;
+import org.ProToType.Threaded.ReceiveUdpPacket;
+import org.ProToType.Threaded.RunsEverySecond;
+import org.ProToType.Threaded.RunsEveryTick;
 
-import java.io.IOException;
+import javax.swing.*;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
-import java.sql.SQLException;
+import java.net.Socket;
 
 public class Main {
     public static final Gson gson = new Gson();
@@ -20,11 +21,29 @@ public class Main {
     public static int udpPort;
     public static ServerSocket tcpServerSocket;
     public static DatagramSocket udpServerSocket;
-    public static ConnectedPlayer[] connectedPlayers;
-//    public static GUI gui;
+
+    public static SwingGUI swingGUI;
 
 
-    public static void main(String[] args) throws SQLException, IOException {
+    public static void main(String[] args) throws Exception {
+        swingGUI = new SwingGUI();
+
+        JFrame window = new JFrame("alo");
+        window.setSize(800, 600);
+        window.setContentPane(swingGUI.rootPanel);
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setVisible(true);
+
+
+//        long firstTime = System.nanoTime();
+//        while (true) {
+//            long difference = System.nanoTime() - firstTime;
+//            if (difference >= 100000000) {
+//                System.out.println(difference / 1000000);
+//                break;
+//            }
+//        }
+
         ConfigFile configFile = new ConfigFile(); // reads and sets up stuff from config file
         Encryption.SetEncryptionKey(configFile.encryptionKey);
         maxPlayers = configFile.maxPlayers;
@@ -32,7 +51,7 @@ public class Main {
         tcpPort = configFile.tcpPort;
         udpPort = tcpPort + 1;
 
-        connectedPlayers = new ConnectedPlayer[configFile.maxPlayers]; // creates an array that holds information of connected players
+        PlayersManager.CreateConnectedPlayerArray(maxPlayers);
 
         tcpServerSocket = new ServerSocket(tcpPort); // starts the TCP server
         udpServerSocket = new DatagramSocket(udpPort); // starts the UDP server
@@ -41,22 +60,29 @@ public class Main {
 
         configFile = null; // nullifies the config file instance as it won't be needed anymore
 
-//        database.RegisterPlayer("User", "testpassword");
+        ReceiveUdpPacket receiveUdpPacket = new ReceiveUdpPacket();
+        Thread udpReceiverThread = new Thread(receiveUdpPacket); // starts thread that listens to incoming udp connections from anyone
+        udpReceiverThread.start();
 
-        new Thread(ReceivePacket::ReceiveUdpPacket).start(); // starts thread that listens to incoming udp connections from anyone
-        new Thread(SendPacket::SendPlayerPositions).start(); // starts thread that sends the current player positions to each player
+        RunsEveryTick runsEveryTick = new RunsEveryTick(); // starts thread that sends the current player positions to each player
+        Thread tickThread = new Thread(runsEveryTick);
+        tickThread.start();
+
+        RunsEverySecond runsEverySecond = new RunsEverySecond();
+        Thread oneSecondThread = new Thread(runsEverySecond);
+        oneSecondThread.start();
 
         // Handle new players joining
-        Authentication authentication = new Authentication(); // handles authentication of connecting client
         while (true) {
-            ConnectedPlayer connectedPlayer = authentication.HandleNewConnections();
-            if (connectedPlayer != null) { // runs if the authentication of connecting player was successful
-                ReceiveTcpPacket receiveTcpPacket = new ReceiveTcpPacket(connectedPlayer);
-                Thread thread = new Thread(receiveTcpPacket);
-                thread.start();
-            } else {
-                PrintWithTime.Print("Authentication of new player failed horribly.");
+            try {
+                PrintWithTime.print("Waiting for a player to connect...");
+                Socket tcpClientSocket = tcpServerSocket.accept();
+                PlayerAuthenticator playerAuthenticator = new PlayerAuthenticator();
+                playerAuthenticator.StartAuthentication(tcpClientSocket);
+            } catch (Exception e) {
+                PrintWithTime.print(e.getMessage());
             }
         }
+
     }
 }

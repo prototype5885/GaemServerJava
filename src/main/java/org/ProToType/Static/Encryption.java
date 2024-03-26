@@ -33,7 +33,7 @@ public class Encryption {
             // return as string
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            PrintWithTime.Print("Decryption of a message failed");
+            PrintWithTime.print("Decryption of a message failed");
             return null;
         }
     }
@@ -57,7 +57,7 @@ public class Encryption {
             // return the encrypted message as byte array
             return encryptedBytesWithIV;
         } catch (Exception e) {
-            PrintWithTime.Print("Encryption of a message failed");
+            PrintWithTime.print("Encryption of a message failed");
             return null;
         }
     }

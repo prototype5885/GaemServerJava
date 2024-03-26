@@ -58,22 +58,6 @@ public class ConnectedPlayer {
         this.tcpClientSocket = tcpClientSocket;
     }
 
-    public InputStream getInputStream() {
-        return inputStream;
-    }
-
-    public void setInputStream(InputStream inputStream) {
-        this.inputStream = inputStream;
-    }
-
-    public OutputStream getOutputStream() {
-        return outputStream;
-    }
-
-    public void setOutputStream(OutputStream outputStream) {
-        this.outputStream = outputStream;
-    }
-
     public InetAddress getIpAddress() {
         return ipAddress;
     }
@@ -130,13 +114,13 @@ public class ConnectedPlayer {
         this.latency = latency;
     }
 
-    public PlayerPosition getPosition() {
-        return position;
-    }
-
-    public void setPosition(PlayerPosition position) {
-        this.position = position;
-    }
+//    public PlayerPosition getPosition() {
+//        return position;
+//    }
+//
+//    public void setPosition(PlayerPosition position) {
+//        this.position = position;
+//    }
 
     public void setPingRequestTime(Instant pingRequestTime) {
         this.pingRequestTime = pingRequestTime;
@@ -152,5 +136,21 @@ public class ConnectedPlayer {
 
     public Instant getPingRequestTime() {
         return pingRequestTime;
+    }
+
+    public InputStream getInputStream() {
+        return inputStream;
+    }
+
+    public void setInputStream(InputStream inputStream) {
+        this.inputStream = inputStream;
+    }
+
+    public OutputStream getOutputStream() {
+        return outputStream;
+    }
+
+    public void setOutputStream(OutputStream outputStream) {
+        this.outputStream = outputStream;
     }
 }

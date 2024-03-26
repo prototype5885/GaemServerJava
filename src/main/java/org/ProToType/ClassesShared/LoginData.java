@@ -1,16 +1,16 @@
 package org.ProToType.ClassesShared;
 
 public class LoginData {
-    public boolean lr;
-    public String un;
-    public String pw;
+    public boolean reg; // true means player wants to register
+    public String un; // player name
+    public String pw; // password
 
-    public boolean isLr() {
-        return lr;
+    public boolean isReg() {
+        return reg;
     }
 
-    public void setLr(boolean lr) {
-        this.lr = lr;
+    public void setReg(boolean reg) {
+        this.reg = reg;
     }
 
     public String getUn() {

@@ -1,15 +1,18 @@
-package org.ProToType;
+package org.ProToType.Static;
 
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.ClassesShared.ChatMessage;
 import org.ProToType.ClassesShared.PlayerPosition;
+import org.ProToType.Main;
 import org.ProToType.Static.Encryption;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
+import java.net.Socket;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -20,8 +23,9 @@ public class SendPacket {
             byte[] messageBytes = EncodeMessage(commandType, message);
             // Monitoring here
             connectedPlayer.outputStream.write(messageBytes);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (Exception e) {
+            PrintWithTime.print("Error sending Tcp packet, " + e.getMessage());
+            PlayersManager.DisconnectPlayer(connectedPlayer);
         }
     }
 
@@ -52,36 +56,12 @@ public class SendPacket {
         chatMessage.m = message;
 
         String jsonData = Main.gson.toJson(chatMessage);
-        for (ConnectedPlayer player : Main.connectedPlayers) {
+        for (ConnectedPlayer player : PlayersManager.connectedPlayers) {
             if (player == null) continue;
             SendTcp(2, jsonData, player);
         }
     }
 
-    public static void SendPlayerPositions() {
-        PlayerPosition[] everyPlayersPosition = new PlayerPosition[Main.maxPlayers];
-
-        while (true) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            for (byte i = 0; i < Main.maxPlayers; i++) {
-                if (Main.connectedPlayers[i] == null) {
-                    everyPlayersPosition[i] = null;
-                    continue;
-                }
-                everyPlayersPosition[i] = Main.connectedPlayers[i].position;
-            }
-            for (ConnectedPlayer connectedPlayer : Main.connectedPlayers) {
-                if (connectedPlayer == null) continue;
-                String jsonData = Main.gson.toJson(everyPlayersPosition);
-                SendUdp(3, jsonData, connectedPlayer);
-            }
-
-        }
-    }
 
 //    public void SendPlayerDataToEveryone(int maxPlayers) {
 //        String jsonData = gson.toJson(playersManager.GetDataOfEveryConnectedPlayer(maxPlayers));

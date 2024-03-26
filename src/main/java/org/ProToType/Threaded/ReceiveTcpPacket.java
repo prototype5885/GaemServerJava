@@ -1,10 +1,12 @@
 package org.ProToType.Threaded;
 
 import org.ProToType.Classes.ConnectedPlayer;
-import org.ProToType.ProcessPacket;
+
+import org.ProToType.Static.*;
+
 
 public class ReceiveTcpPacket implements Runnable {
-    ConnectedPlayer connectedPlayer;
+    ConnectedPlayer connectedPlayer = new ConnectedPlayer();
 
     public ReceiveTcpPacket(ConnectedPlayer connectedPlayer) {
         this.connectedPlayer = connectedPlayer;
@@ -13,7 +15,6 @@ public class ReceiveTcpPacket implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("started thread");
             byte[] buffer = new byte[1024];
             int bytesRead;
             while (true) {
@@ -21,8 +22,9 @@ public class ReceiveTcpPacket implements Runnable {
                     ProcessPacket.ProcessReceivedBytes(connectedPlayer, buffer, bytesRead);
                 }
             }
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (Exception e) {
+            PrintWithTime.print("Error receiving Tcp packet, " + e.getMessage());
+            PlayersManager.DisconnectPlayer(connectedPlayer);
         }
     }
 }

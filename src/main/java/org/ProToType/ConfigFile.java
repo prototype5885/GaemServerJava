@@ -5,61 +5,62 @@ import org.ProToType.Static.PrintWithTime;
 import java.io.*;
 
 public class ConfigFile {
-    private final String tcpPortString = "tcpPort";
-    private final String tickRateString = "tickRate";
-    private final String maxPlayersString = "maxPlayers";
-    private final String encryptionKeyString = "encryptionKey";
-    private final String localDatabaseString = "localDatabase";
-    private final String remoteDatabaseIpAddressString = "remoteDatabaseIpAddress";
-    private final String remoteDatabasePortString = "remoteDatabasePort";
-    private final String dbUsernameString = "dbUsername";
-    private final String dbPasswordString = "dbPassword";
 
-    public int tcpPort;
-    public int tickRate;
-    public int maxPlayers;
-    public String encryptionKey;
-    public boolean localDatabase;
-    public String remoteDatabaseIpAddress;
-    public String remoteDatabasePort;
-    public String dbUsername;
-    public String dbPassword;
-
+    public int tcpPort = 1942;
+    public int tickRate = 10;
+    public int maxPlayers = 128;
+    public String encryptionKey = "0123456789ABCDEF0123456789ABCDEF";
+    public String databaseType = "h2";
+    public String remoteDatabaseIpAddress = "127.0.0.1";
+    public String remoteDatabasePort = "3306";
+    public String dbUsername = "username";
+    public String dbPassword = "password";
 
     public ConfigFile() throws IOException {
-        String configFilename = "config.txt";
-        File configFile = new File(configFilename);
+        final String configFilename = "config.txt";
+        final File configFile = new File(configFilename);
 
         // runs if config file doesn't exist
+        final String tcpPortString = "tcpPort";
+        final String tickRateString = "tickRate";
+        final String maxPlayersString = "maxPlayers";
+        final String encryptionKeyString = "encryptionKey";
+        final String databaseTypeString = "databaseType";
+        final String remoteDatabaseIpAddressString = "remoteDatabaseIpAddress";
+        final String remoteDatabasePortString = "remoteDatabasePort";
+        final String dbUsernameString = "dbUsername";
+        final String dbPasswordString = "dbPassword";
+
         if (!configFile.exists()) {
-            PrintWithTime.Print("Config file doesn't exist, creating new...");
+            PrintWithTime.print("Config file doesn't exist, creating new...");
 
             configFile.createNewFile();
-            FileWriter writer = new FileWriter(configFilename);
+            final FileWriter writer = new FileWriter(configFilename);
 
-            writer.write(FormatConfig(tcpPortString, String.valueOf(1942)));
-            writer.write(FormatConfig(tickRateString, String.valueOf(10)));
-            writer.write(FormatConfig(maxPlayersString, String.valueOf(10)));
-            writer.write(FormatConfig(encryptionKeyString, "0123456789ABCDEF0123456789ABCDEF"));
-            writer.write(FormatConfig(localDatabaseString, String.valueOf(true)));
-            writer.write(FormatConfig(remoteDatabaseIpAddressString, "127.0.0.1"));
-            writer.write(FormatConfig(remoteDatabasePortString, String.valueOf(3306)));
-            writer.write(FormatConfig(dbUsernameString, "username"));
-            writer.write(FormatConfig(dbPasswordString, "password"));
+            writer.write(FormatConfig(tcpPortString, String.valueOf(tcpPort)));
+            writer.write(FormatConfig(tickRateString, String.valueOf(tickRate)));
+            writer.write(FormatConfig(maxPlayersString, String.valueOf(maxPlayers)));
+            writer.write(FormatConfig(encryptionKeyString, encryptionKey));
+            writer.write(FormatConfig(databaseTypeString, databaseType));
+            writer.write(FormatConfig(remoteDatabaseIpAddressString, remoteDatabaseIpAddress));
+            writer.write(FormatConfig(remoteDatabasePortString, remoteDatabasePort));
+            writer.write(FormatConfig(dbUsernameString, dbUsername));
+            writer.write(FormatConfig(dbPasswordString, dbPassword));
 
             writer.close();
-            PrintWithTime.Print("Config file created");
+            PrintWithTime.print("Config file created, reading config file now...");
 
         }
 
         // runs if or when config file exists
         String line;
 
-        BufferedReader reader = new BufferedReader(new FileReader(configFile));
+
+        final BufferedReader reader = new BufferedReader(new FileReader(configFile));
         while ((line = reader.readLine()) != null) {
-            String[] parts = line.split("=");
+            final String[] parts = line.split("=");
             if (parts.length == 2) {
-                String key = parts[0].trim();
+                final String key = parts[0].trim();
                 switch (key) {
                     case tcpPortString:
                         tcpPort = Integer.parseInt(parts[1].trim());
@@ -73,14 +74,15 @@ public class ConfigFile {
                     case encryptionKeyString:
                         encryptionKey = parts[1].trim();
                         break;
-                    case localDatabaseString:
-                        localDatabase = Boolean.parseBoolean(parts[1].trim());
+                    case databaseTypeString:
+                        databaseType = parts[1].trim();
                         break;
                     case remoteDatabaseIpAddressString:
                         remoteDatabaseIpAddress = parts[1].trim();
                         break;
                     case remoteDatabasePortString:
                         remoteDatabasePort = parts[1].trim();
+                        break;
                     case dbUsernameString:
                         dbUsername = parts[1].trim();
                         break;
@@ -91,7 +93,7 @@ public class ConfigFile {
             }
         }
         reader.close();
-        System.out.println("Config file read");
+        PrintWithTime.print("Config file read successfully");
     }
 
     private String FormatConfig(String name, String value) {

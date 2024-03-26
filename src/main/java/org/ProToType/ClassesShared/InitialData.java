@@ -1,18 +1,18 @@
 package org.ProToType.ClassesShared;
 
 public class InitialData {
-    public int lr;
+    public int rv;
     public int i;
     public int mp;
     public int tr;
     public PlayerData[] pda;
 
-    public int getLr() {
-        return lr;
+    public int getRv() {
+        return rv;
     }
 
-    public void setLr(int lr) {
-        this.lr = lr;
+    public void setRv(int rv) {
+        this.rv = rv;
     }
 
     public int getI() {

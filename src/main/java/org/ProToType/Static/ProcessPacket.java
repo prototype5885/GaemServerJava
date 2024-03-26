@@ -1,8 +1,9 @@
-package org.ProToType;
+package org.ProToType.Static;
 
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Classes.Packet;
 import org.ProToType.ClassesShared.PlayerPosition;
+import org.ProToType.Main;
 import org.ProToType.Static.Encryption;
 
 import java.nio.charset.StandardCharsets;
@@ -64,6 +65,7 @@ public class ProcessPacket {
     }
 
     private static void ProcessDataSentByPlayer(Packet packet, ConnectedPlayer connectedPlayer) {
+//        System.out.println(packet.data);
         switch (packet.type) {
             case 0:
                 connectedPlayer.udpPingAnswered = true;
@@ -74,7 +76,7 @@ public class ProcessPacket {
 //                playersManager.SendChatMessageToEveryone(connectedPlayer, packet.data);
                 break;
             case 3:
-                connectedPlayer.position = Main.gson.fromJson(packet.data, PlayerPosition.class);
+                PlayersManager.UpdatePlayerPosition(connectedPlayer, packet.data);
                 break;
         }
     }
