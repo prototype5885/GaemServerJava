@@ -4,7 +4,7 @@ package org.ProToType.Threaded;
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Main;
 import org.ProToType.Static.PlayersManager;
-import org.ProToType.Static.ProcessPacket;
+import org.ProToType.Static.PacketProcessor;
 
 import java.net.DatagramPacket;
 
@@ -28,7 +28,7 @@ public class ReceiveUdpPacket implements Runnable {
                     }
                 }
                 if (connectedPlayer != null) { // runs if sender is a connected players
-                    ProcessPacket.ProcessReceivedBytes(connectedPlayer, udpPacket.getData(), udpPacket.getLength());
+                    PacketProcessor.ProcessReceivedBytes(connectedPlayer, udpPacket.getData(), udpPacket.getLength());
                 }
             }
         } catch (Exception ex) {

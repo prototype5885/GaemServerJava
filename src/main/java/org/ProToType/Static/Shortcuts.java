@@ -3,8 +3,8 @@ package org.ProToType.Static;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class PrintWithTime {
-    public static void print(String stringToPrint) {
+public class Shortcuts {
+    public static void PrintWithTime(String stringToPrint) {
         LocalDateTime localDateTime = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd, HH:mm:ss");
         String dateTime = localDateTime.format(dateTimeFormatter);

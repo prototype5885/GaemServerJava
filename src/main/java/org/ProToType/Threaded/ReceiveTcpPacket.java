@@ -19,11 +19,11 @@ public class ReceiveTcpPacket implements Runnable {
             int bytesRead;
             while (true) {
                 while ((bytesRead = connectedPlayer.inputStream.read(buffer)) != -1) {
-                    ProcessPacket.ProcessReceivedBytes(connectedPlayer, buffer, bytesRead);
+                    PacketProcessor.ProcessReceivedBytes(connectedPlayer, buffer, bytesRead);
                 }
             }
         } catch (Exception e) {
-            PrintWithTime.print("Error receiving Tcp packet, " + e.getMessage());
+            Shortcuts.PrintWithTime("Error receiving Tcp packet, " + e.getMessage());
             PlayersManager.DisconnectPlayer(connectedPlayer);
         }
     }

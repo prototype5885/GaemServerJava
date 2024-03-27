@@ -2,9 +2,6 @@ package org.ProToType.Static;
 
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Classes.Packet;
-import org.ProToType.ClassesShared.PlayerPosition;
-import org.ProToType.Main;
-import org.ProToType.Static.Encryption;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -13,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class ProcessPacket {
+public class PacketProcessor {
     public static void ProcessReceivedBytes(ConnectedPlayer connectedPlayer, byte[] buffer, int byteLength) {
         // trims the buffer down
         byte[] receivedBytes = new byte[byteLength];
@@ -53,7 +50,7 @@ public class ProcessPacket {
         List<Packet> packets = new ArrayList<>();
 
         while (typeMatcher.find() && dataMatcher.find()) {
-            byte typeOfPacket = Byte.parseByte(typeMatcher.group(1));
+            int typeOfPacket = Integer.parseInt(typeMatcher.group(1));
 
             Packet packet = new Packet();
             packet.type = typeOfPacket;

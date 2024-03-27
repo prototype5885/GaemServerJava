@@ -2,20 +2,10 @@ package org.ProToType.Static;
 
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.ClassesShared.ChatMessage;
-import org.ProToType.ClassesShared.PlayerPosition;
 import org.ProToType.Main;
-import org.ProToType.Static.Encryption;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.DatagramPacket;
-import java.net.Socket;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class SendPacket {
     public static void SendTcp(int commandType, String message, ConnectedPlayer connectedPlayer) {
@@ -24,7 +14,7 @@ public class SendPacket {
             // Monitoring here
             connectedPlayer.outputStream.write(messageBytes);
         } catch (Exception e) {
-            PrintWithTime.print("Error sending Tcp packet, " + e.getMessage());
+            Shortcuts.PrintWithTime("Error sending Tcp packet, " + e.getMessage());
             PlayersManager.DisconnectPlayer(connectedPlayer);
         }
     }

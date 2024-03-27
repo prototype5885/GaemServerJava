@@ -44,25 +44,25 @@ public class PlayersManager {
     }
 
     public static void UpdatePlayerPosition(ConnectedPlayer connectedPlayer, String playerPosString) {
-        connectedPlayer.position = Main.gson.fromJson(playerPosString, PlayerPosition.class);
+        connectedPlayer.position.UpdatePlayerPosition(Main.gson.fromJson(playerPosString, PlayerPosition.class));
     }
 
     public static void DisconnectPlayer(ConnectedPlayer connectedPlayer) {
-        PrintWithTime.print(String.format("Removing player {%s} from server...", connectedPlayer.playerName));
+        Shortcuts.PrintWithTime(String.format("Removing player {%s} from server...", connectedPlayer.playerName));
 
         try {
             connectedPlayer.tcpClientSocket.shutdownOutput();
             connectedPlayer.tcpClientSocket.shutdownInput();
             connectedPlayer.tcpClientSocket.close();
         } catch (IOException e) {
-            PrintWithTime.print(e.toString());
+            Shortcuts.PrintWithTime(e.toString());
         } finally {
-            PrintWithTime.print(String.format("Is the socket closed for player {%s}: %s", connectedPlayer.playerName, connectedPlayer.tcpClientSocket.isClosed()));
+            Shortcuts.PrintWithTime(String.format("Is the socket closed for player {%s}: %s", connectedPlayer.playerName, connectedPlayer.tcpClientSocket.isClosed()));
             for (int i = 0; i < Main.maxPlayers; i++) {
                 if (connectedPlayers[i] == null) continue;
                 if (connectedPlayer.equals(connectedPlayers[i])) {
                     connectedPlayers[i] = null;
-                    PrintWithTime.print(String.format("Slot status for player {%s}: %s", connectedPlayer.playerName, connectedPlayers[i]));
+                    Shortcuts.PrintWithTime(String.format("Slot status for player {%s}: %s", connectedPlayer.playerName, connectedPlayers[i]));
                     break;
                 }
             }

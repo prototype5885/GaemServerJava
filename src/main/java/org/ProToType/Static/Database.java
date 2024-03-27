@@ -2,7 +2,7 @@ package org.ProToType.Static;
 
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.ClassesShared.PlayerPosition;
-import org.ProToType.ConfigFile;
+import org.ProToType.Instanceables.ConfigFile;
 import org.ProToType.Main;
 
 import java.sql.*;
@@ -36,7 +36,7 @@ public class Database {
     }
 
     private static void ConnectToLocalH2() throws SQLException, ClassNotFoundException {
-        PrintWithTime.print("Connecting to local H2 database...");
+        Shortcuts.PrintWithTime("Connecting to local H2 database...");
         Class.forName("org.h2.Driver");
 
 //        String user = "user";
@@ -51,11 +51,11 @@ public class Database {
         String query = InitialQuery("h2");
         Statement statement = dbConnection.createStatement();
         statement.executeUpdate(query);
-        PrintWithTime.print("Connected to local H2 database successfully");
+        Shortcuts.PrintWithTime("Connected to local H2 database successfully");
     }
 
     private static void ConnectToH2Server() throws SQLException, ClassNotFoundException {
-        PrintWithTime.print("Connecting to H2 server database...");
+        Shortcuts.PrintWithTime("Connecting to H2 server database...");
         Class.forName("org.h2.Driver");
 
         org.h2.tools.Server.createTcpServer("-tcp", "-ifNotExists").start();
@@ -72,11 +72,11 @@ public class Database {
         String query = InitialQuery("h2");
         Statement statement = dbConnection.createStatement();
         statement.executeUpdate(query);
-        PrintWithTime.print("Connected to H2 server database successfully");
+        Shortcuts.PrintWithTime("Connected to H2 server database successfully");
     }
 
     private static void ConnectToSQLite() throws SQLException, ClassNotFoundException {
-        PrintWithTime.print("Connecting to SQLite database...");
+        Shortcuts.PrintWithTime("Connecting to SQLite database...");
         Class.forName("org.sqlite.JDBC");
 
         String dbType = "jdbc:sqlite:";
@@ -88,11 +88,11 @@ public class Database {
         String query = InitialQuery("sqlite");
         Statement statement = dbConnection.createStatement();
         statement.executeUpdate(query);
-        PrintWithTime.print("Connected to SQLite database successfully");
+        Shortcuts.PrintWithTime("Connected to SQLite database successfully");
     }
 
     private static void ConnectToMySQL(ConfigFile configFile) throws SQLException, ClassNotFoundException {
-        PrintWithTime.print("Connecting to MySQL database...");
+        Shortcuts.PrintWithTime("Connecting to MySQL database...");
         Class.forName("com.mysql.cj.jdbc.Driver");
 
         String type = "jdbc:mysql://";
@@ -109,7 +109,7 @@ public class Database {
         String query = InitialQuery("mysql");
         Statement statement = dbConnection.createStatement();
         statement.executeUpdate(query);
-        PrintWithTime.print("Connected to MySQL database successfully");
+        Shortcuts.PrintWithTime("Connected to MySQL database successfully");
     }
 
     private static String InitialQuery(String dbType) {
@@ -139,7 +139,7 @@ public class Database {
         preparedStatement.setInt(4, 1010);
         preparedStatement.execute();
 
-        PrintWithTime.print(String.format("Player {%s} has been added to the database", playerName));
+        Shortcuts.PrintWithTime(String.format("Player {%s} has been added to the database", playerName));
     }
 
     public static ResultSet SearchForPlayerInDatabase(String playerName) throws SQLException {

@@ -1,10 +1,9 @@
 package org.ProToType.Threaded;
 
 import org.ProToType.Classes.ConnectedPlayer;
-import org.ProToType.Main;
 import org.ProToType.Static.Database;
 import org.ProToType.Static.PlayersManager;
-import org.ProToType.Static.PrintWithTime;
+import org.ProToType.Static.Shortcuts;
 
 public class RunsEverySecond implements Runnable {
     @Override
@@ -23,7 +22,7 @@ public class RunsEverySecond implements Runnable {
 //            PrintWithTime.print("Position to database");
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            PrintWithTime.print(e.toString());
+            Shortcuts.PrintWithTime(e.toString());
         }
     }
 }

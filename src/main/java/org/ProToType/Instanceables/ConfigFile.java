@@ -1,6 +1,6 @@
-package org.ProToType;
+package org.ProToType.Instanceables;
 
-import org.ProToType.Static.PrintWithTime;
+import org.ProToType.Static.Shortcuts;
 
 import java.io.*;
 
@@ -32,7 +32,7 @@ public class ConfigFile {
         final String dbPasswordString = "dbPassword";
 
         if (!configFile.exists()) {
-            PrintWithTime.print("Config file doesn't exist, creating new...");
+            Shortcuts.PrintWithTime("Config file doesn't exist, creating new...");
 
             configFile.createNewFile();
             final FileWriter writer = new FileWriter(configFilename);
@@ -48,7 +48,7 @@ public class ConfigFile {
             writer.write(FormatConfig(dbPasswordString, dbPassword));
 
             writer.close();
-            PrintWithTime.print("Config file created, reading config file now...");
+            Shortcuts.PrintWithTime("Config file created, reading config file now...");
 
         }
 
@@ -93,7 +93,7 @@ public class ConfigFile {
             }
         }
         reader.close();
-        PrintWithTime.print("Config file read successfully");
+        Shortcuts.PrintWithTime("Config file read successfully");
     }
 
     private String FormatConfig(String name, String value) {

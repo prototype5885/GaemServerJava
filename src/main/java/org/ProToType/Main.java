@@ -1,8 +1,10 @@
 package org.ProToType;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import org.ProToType.Instanceables.ConfigFile;
+import org.ProToType.Instanceables.PlayerAuthenticator;
 import org.ProToType.Static.*;
-import org.ProToType.Threaded.ReceiveTcpPacket;
 import org.ProToType.Threaded.ReceiveUdpPacket;
 import org.ProToType.Threaded.RunsEverySecond;
 import org.ProToType.Threaded.RunsEveryTick;
@@ -26,13 +28,14 @@ public class Main {
 
 
     public static void main(String[] args) throws Exception {
-        swingGUI = new SwingGUI();
 
-        JFrame window = new JFrame("alo");
-        window.setSize(800, 600);
-        window.setContentPane(swingGUI.rootPanel);
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setVisible(true);
+//        swingGUI = new SwingGUI();
+//
+//        JFrame window = new JFrame("alo");
+//        window.setSize(800, 600);
+//        window.setContentPane(swingGUI.rootPanel);
+//        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        window.setVisible(true);
 
 
 //        long firstTime = System.nanoTime();
@@ -75,12 +78,12 @@ public class Main {
         // Handle new players joining
         while (true) {
             try {
-                PrintWithTime.print("Waiting for a player to connect...");
+                Shortcuts.PrintWithTime("Waiting for a player to connect...");
                 Socket tcpClientSocket = tcpServerSocket.accept();
                 PlayerAuthenticator playerAuthenticator = new PlayerAuthenticator();
                 playerAuthenticator.StartAuthentication(tcpClientSocket);
             } catch (Exception e) {
-                PrintWithTime.print(e.getMessage());
+                Shortcuts.PrintWithTime(e.getMessage());
             }
         }
 
