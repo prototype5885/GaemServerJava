@@ -19,11 +19,13 @@ public class PacketProcessor {
         // Decrypts or decodes the message
         String receivedBytesInString = Decode(receivedBytes);
 
+
         // Separate if multiple packets were read as one
         List<Packet> packets = SeparatePackets(receivedBytesInString);
 
         // Processes each packet
         for (Packet packet : packets) {
+            if (packet == null) continue;
             ProcessDataSentByPlayer(packet, connectedPlayer);
         }
     }
@@ -44,17 +46,18 @@ public class PacketProcessor {
         Pattern typePattern = Pattern.compile(packetTypePattern);
         Pattern dataPattern = Pattern.compile(packetDataPattern);
 
-        Matcher typeMatcher = typePattern.matcher(receivedBytesInString);
-        Matcher dataMatcher = dataPattern.matcher(receivedBytesInString);
+        Matcher packetTypeMatches = typePattern.matcher(receivedBytesInString);
+        Matcher packetDataMatches = dataPattern.matcher(receivedBytesInString);
+
+        if (packetTypeMatches.groupCount() != packetDataMatches.groupCount()) return null;
 
         List<Packet> packets = new ArrayList<>();
-
-        while (typeMatcher.find() && dataMatcher.find()) {
-            int typeOfPacket = Integer.parseInt(typeMatcher.group(1));
+        while (packetTypeMatches.find() && packetDataMatches.find()) {
+            int typeOfPacket = Integer.parseInt(packetTypeMatches.group(1));
 
             Packet packet = new Packet();
             packet.type = typeOfPacket;
-            packet.data = dataMatcher.group(1);
+            packet.data = packetDataMatches.group(1);
 
             packets.add(packet);
         }

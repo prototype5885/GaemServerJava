@@ -1,6 +1,6 @@
-
 package org.ProToType.Static;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.ClassesShared.PlayerData;
 import org.ProToType.ClassesShared.PlayerPosition;
@@ -24,7 +24,6 @@ public class PlayersManager {
         connectedPlayer.latency = duration.getNano();
     }
 
-
     public static PlayerData[] GetDataOfEveryConnectedPlayer(int maxPlayers) {
         PlayerData[] playerDataArray = new PlayerData[maxPlayers];
         for (int i = 0; i < maxPlayers; i++) {
@@ -44,7 +43,11 @@ public class PlayersManager {
     }
 
     public static void UpdatePlayerPosition(ConnectedPlayer connectedPlayer, String playerPosString) {
-        connectedPlayer.position.UpdatePlayerPosition(Main.gson.fromJson(playerPosString, PlayerPosition.class));
+        try {
+            connectedPlayer.position = Main.jackson.readValue(playerPosString, PlayerPosition.class);
+        } catch (JsonProcessingException e) {
+            Shortcuts.PrintWithTime(e.toString());
+        }
     }
 
     public static void DisconnectPlayer(ConnectedPlayer connectedPlayer) {
@@ -67,5 +70,15 @@ public class PlayersManager {
                 }
             }
         }
+    }
+
+    public static int GetConnectedPlayersCount() {
+        int playerCount = 0;
+        for (ConnectedPlayer connectedPlayer : PlayersManager.connectedPlayers) {
+            if (connectedPlayer != null) {
+                playerCount++;
+            }
+        }
+        return playerCount;
     }
 }

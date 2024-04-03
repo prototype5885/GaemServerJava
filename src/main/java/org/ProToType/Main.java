@@ -1,7 +1,6 @@
 package org.ProToType;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ProToType.Instanceables.ConfigFile;
 import org.ProToType.Instanceables.PlayerAuthenticator;
 import org.ProToType.Static.*;
@@ -9,13 +8,13 @@ import org.ProToType.Threaded.ReceiveUdpPacket;
 import org.ProToType.Threaded.RunsEverySecond;
 import org.ProToType.Threaded.RunsEveryTick;
 
-import javax.swing.*;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Vector;
 
 public class Main {
-    public static final Gson gson = new Gson();
+    public static final ObjectMapper jackson = new ObjectMapper();
 
     public static int maxPlayers;
     public static int tickRate;
@@ -24,11 +23,10 @@ public class Main {
     public static ServerSocket tcpServerSocket;
     public static DatagramSocket udpServerSocket;
 
-    public static SwingGUI swingGUI;
+//    public static SwingGUI swingGUI;
 
 
     public static void main(String[] args) throws Exception {
-
 //        swingGUI = new SwingGUI();
 //
 //        JFrame window = new JFrame("alo");
@@ -61,27 +59,19 @@ public class Main {
 
         Database.ConnectToDatabase(configFile);
 
-        configFile = null; // nullifies the config file instance as it won't be needed anymore
-
-        ReceiveUdpPacket receiveUdpPacket = new ReceiveUdpPacket();
-        Thread udpReceiverThread = new Thread(receiveUdpPacket); // starts thread that listens to incoming udp connections from anyone
-        udpReceiverThread.start();
-
-        RunsEveryTick runsEveryTick = new RunsEveryTick(); // starts thread that sends the current player positions to each player
-        Thread tickThread = new Thread(runsEveryTick);
-        tickThread.start();
-
-        RunsEverySecond runsEverySecond = new RunsEverySecond();
-        Thread oneSecondThread = new Thread(runsEverySecond);
-        oneSecondThread.start();
+        configFile = null; // nullifies the config file instance as it won't be neede   d anymore
+        
+        Thread.ofVirtual().start(new ReceiveUdpPacket());
+        Thread.ofVirtual().start(new RunsEveryTick());
+        Thread.ofVirtual().start(new RunsEverySecond());
 
         // Handle new players joining
         while (true) {
             try {
                 Shortcuts.PrintWithTime("Waiting for a player to connect...");
                 Socket tcpClientSocket = tcpServerSocket.accept();
-                PlayerAuthenticator playerAuthenticator = new PlayerAuthenticator();
-                playerAuthenticator.StartAuthentication(tcpClientSocket);
+                new PlayerAuthenticator().StartAuthentication(tcpClientSocket);
+//                playerAuthenticator.StartAuthentication(tcpClientSocket);
             } catch (Exception e) {
                 Shortcuts.PrintWithTime(e.getMessage());
             }

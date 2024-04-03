@@ -1,5 +1,6 @@
 package org.ProToType.Instanceables;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Classes.LoginResult;
 import org.ProToType.Classes.Packet;
@@ -20,7 +21,7 @@ public class PlayerAuthenticator {
 
     public void StartAuthentication(Socket tcpClientSocket) {
         try {
-            Shortcuts.PrintWithTime("Started a new thread for new player");
+            Shortcuts.PrintWithTime("Started authenticating the connecting player...");
 
             // find which player slot is free
             ConnectedPlayer connectedPlayer = FindFreeSlotForConnectingPlayer();
@@ -76,6 +77,7 @@ public class PlayerAuthenticator {
             initialData.i = connectedPlayer.index;
             initialData.mp = Main.maxPlayers;
             initialData.tr = Main.tickRate;
+            initialData.up = Main.udpPort;
             initialData.pda = PlayersManager.GetDataOfEveryConnectedPlayer(Main.maxPlayers);
             SendPositiveResponseToPlayer(connectedPlayer, initialData);
 
@@ -85,8 +87,12 @@ public class PlayerAuthenticator {
             // starts a loop on a thread where the server listens to the player client's future packets
             Shortcuts.PrintWithTime(String.format("Authentication for player {%s} was success, starts listening for tcp stream...", connectedPlayer.playerName));
             ReceiveTcpPacket playerClientHandler = new ReceiveTcpPacket(connectedPlayer); // handles authentication of connecting client
-            Thread thread = new Thread(playerClientHandler);
-            thread.start();
+
+//            Thread thread = new Thread(playerClientHandler);
+//            thread.start();
+            Thread virtualThread = Thread.ofVirtual().unstarted(new ReceiveTcpPacket(connectedPlayer));
+            virtualThread.start();
+
 
         } catch (Exception e) {
             Shortcuts.PrintWithTime(e.toString());
@@ -102,7 +108,7 @@ public class PlayerAuthenticator {
                 ConnectedPlayer connectedPlayer = new ConnectedPlayer();
                 connectedPlayer.position = new PlayerPosition();
                 connectedPlayer.index = i;
-                connectedPlayer.position.i = i;
+//                connectedPlayer.position.i = i;
                 return connectedPlayer;
             }
         }
@@ -123,9 +129,11 @@ public class PlayerAuthenticator {
         // Monitoring.receivedBytesPerSecond += bytesRead;
 
         for (Packet packet : packets) {
+            if (packet == null) continue;
             Shortcuts.PrintWithTime("Received data: " + packet.data);
             if (packet.type == 1) {
-                LoginData loginData = Main.gson.fromJson(packet.data, LoginData.class);
+//                LoginData loginData = Main.gson.fromJson(packet.data, LoginData.class);
+                LoginData loginData = Main.jackson.readValue(packet.data, LoginData.class);
                 return loginData;
             }
         }
@@ -211,9 +219,10 @@ public class PlayerAuthenticator {
         }
     }
 
-    private void SendPositiveResponseToPlayer(ConnectedPlayer connectedPlayer, InitialData initialData) {
+    private void SendPositiveResponseToPlayer(ConnectedPlayer connectedPlayer, InitialData initialData) throws IOException {
         Shortcuts.PrintWithTime(String.format("Sending positive reply back to player {%s}...", connectedPlayer.playerName));
-        String jsonData = Main.gson.toJson(initialData);
+//        String jsonData = Main.gson.toJson(initialData);
+        String jsonData = Main.jackson.writeValueAsString(initialData);
         SendPacket.SendTcp(1, jsonData, connectedPlayer);
     }
 
@@ -227,7 +236,8 @@ public class PlayerAuthenticator {
         connectedPlayer.tcpClientSocket = tcpClientSocket;
         connectedPlayer.outputStream = tcpClientSocket.getOutputStream();
 
-        String jsonData = Main.gson.toJson(initialData);
+//        String jsonData = Main.gson.toJson(initialData);
+        String jsonData = Main.jackson.writeValueAsString(initialData);
         SendPacket.SendTcp(1, jsonData, connectedPlayer);
 
         Shortcuts.PrintWithTime("Closing connection of the failed player...");

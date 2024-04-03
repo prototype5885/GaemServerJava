@@ -10,7 +10,7 @@ public class ConfigFile {
     public int tickRate = 10;
     public int maxPlayers = 128;
     public String encryptionKey = "0123456789ABCDEF0123456789ABCDEF";
-    public String databaseType = "h2";
+    public String databaseType = "sqlite";
     public String remoteDatabaseIpAddress = "127.0.0.1";
     public String remoteDatabasePort = "3306";
     public String dbUsername = "username";

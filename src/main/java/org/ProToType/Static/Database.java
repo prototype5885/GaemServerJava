@@ -1,9 +1,7 @@
 package org.ProToType.Static;
 
 import org.ProToType.Classes.ConnectedPlayer;
-import org.ProToType.ClassesShared.PlayerPosition;
 import org.ProToType.Instanceables.ConfigFile;
-import org.ProToType.Main;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -19,12 +17,12 @@ public class Database {
 
     public static void ConnectToDatabase(ConfigFile configFile) throws Exception {
         switch (configFile.databaseType) {
-            case "h2":
-                ConnectToLocalH2();
-                return;
-            case "h2server":
-                ConnectToH2Server();
-                return;
+//            case "h2":
+//                ConnectToLocalH2();
+//                return;
+//            case "h2server":
+//                ConnectToH2Server();
+//                return;
             case "sqlite":
                 ConnectToSQLite();
                 return;
@@ -35,45 +33,45 @@ public class Database {
         throw new Exception("No database could have been loaded");
     }
 
-    private static void ConnectToLocalH2() throws SQLException, ClassNotFoundException {
-        Shortcuts.PrintWithTime("Connecting to local H2 database...");
-        Class.forName("org.h2.Driver");
+//    private static void ConnectToLocalH2() throws SQLException, ClassNotFoundException {
+//        Shortcuts.PrintWithTime("Connecting to local H2 database...");
+//        Class.forName("org.h2.Driver");
+//
+////        String user = "user";
+////        String password = "password";
+//
+//        String dbType = "jdbc:h2:";
+//        String dbName = "./db/GaemServerDatabase";
+//        String url = dbType + dbName;
+//
+//        dbConnection = DriverManager.getConnection(url);
+//
+//        String query = InitialQuery("h2");
+//        Statement statement = dbConnection.createStatement();
+//        statement.executeUpdate(query);
+//        Shortcuts.PrintWithTime("Connected to local H2 database successfully");
+//    }
 
-//        String user = "user";
-//        String password = "password";
-
-        String dbType = "jdbc:h2:";
-        String dbName = "./db/GaemServerDatabase";
-        String url = dbType + dbName;
-
-        dbConnection = DriverManager.getConnection(url);
-
-        String query = InitialQuery("h2");
-        Statement statement = dbConnection.createStatement();
-        statement.executeUpdate(query);
-        Shortcuts.PrintWithTime("Connected to local H2 database successfully");
-    }
-
-    private static void ConnectToH2Server() throws SQLException, ClassNotFoundException {
-        Shortcuts.PrintWithTime("Connecting to H2 server database...");
-        Class.forName("org.h2.Driver");
-
-        org.h2.tools.Server.createTcpServer("-tcp", "-ifNotExists").start();
-
-//        String user = "user";
-//        String password = "password";
-
-        String dbType = "jdbc:h2:tcp://localhost/";
-        String dbName = "./db/GaemServerDatabase";
-        String url = dbType + dbName;
-
-        dbConnection = DriverManager.getConnection(url);
-
-        String query = InitialQuery("h2");
-        Statement statement = dbConnection.createStatement();
-        statement.executeUpdate(query);
-        Shortcuts.PrintWithTime("Connected to H2 server database successfully");
-    }
+//    private static void ConnectToH2Server() throws SQLException, ClassNotFoundException {
+//        Shortcuts.PrintWithTime("Connecting to H2 server database...");
+//        Class.forName("org.h2.Driver");
+//
+//        org.h2.tools.Server.createTcpServer("-tcp", "-ifNotExists").start();
+//
+////        String user = "user";
+////        String password = "password";
+//
+//        String dbType = "jdbc:h2:tcp://localhost/";
+//        String dbName = "./db/GaemServerDatabase";
+//        String url = dbType + dbName;
+//
+//        dbConnection = DriverManager.getConnection(url);
+//
+//        String query = InitialQuery("h2");
+//        Statement statement = dbConnection.createStatement();
+//        statement.executeUpdate(query);
+//        Shortcuts.PrintWithTime("Connected to H2 server database successfully");
+//    }
 
     private static void ConnectToSQLite() throws SQLException, ClassNotFoundException {
         Shortcuts.PrintWithTime("Connecting to SQLite database...");
@@ -168,29 +166,21 @@ public class Database {
         return playerNameList;
     }
 
-    public static void UpdatePlayerPosition(String playerName, PlayerPosition playerPosition) {
-        try {
-            String query = "UPDATE Players SET LastPosition = ? WHERE PlayerName = ?";
+    public static void UpdatePlayerPosition(String playerName, String jsonPlayerPosition) throws SQLException {
+        String query = "UPDATE Players SET LastPosition = ? WHERE PlayerName = ?";
 
-            PreparedStatement preparedStatement = dbConnection.prepareStatement(query);
-            preparedStatement.setObject(1, Main.gson.toJson(playerPosition));
-            preparedStatement.setString(2, playerName);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        PreparedStatement preparedStatement = dbConnection.prepareStatement(query);
+        preparedStatement.setObject(1, jsonPlayerPosition);
+        preparedStatement.setString(2, playerName);
+        preparedStatement.executeUpdate();
     }
 
-    public static void UpdateLastLoginIpAddress(ConnectedPlayer connectedPlayer) {
-        try {
-            String query = "UPDATE Players SET LastLoginIp = ? WHERE PlayerName = ?";
+    public static void UpdateLastLoginIpAddress(ConnectedPlayer connectedPlayer) throws SQLException {
+        String query = "UPDATE Players SET LastLoginIp = ? WHERE PlayerName = ?";
 
-            PreparedStatement preparedStatement = dbConnection.prepareStatement(query);
-            preparedStatement.setObject(1, connectedPlayer.ipAddress.getHostAddress());
-            preparedStatement.setString(2, connectedPlayer.playerName);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        PreparedStatement preparedStatement = dbConnection.prepareStatement(query);
+        preparedStatement.setObject(1, connectedPlayer.ipAddress.getHostAddress());
+        preparedStatement.setString(2, connectedPlayer.playerName);
+        preparedStatement.executeUpdate();
     }
 }

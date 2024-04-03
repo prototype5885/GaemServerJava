@@ -1,10 +1,15 @@
 package org.ProToType.Threaded;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.ClassesShared.PlayerPosition;
+import org.ProToType.ClassesShared.PlayerPositionWithID;
 import org.ProToType.Main;
 import org.ProToType.Static.PlayersManager;
 import org.ProToType.Static.SendPacket;
+import org.ProToType.Static.Shortcuts;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,30 +22,25 @@ public class RunsEveryTick implements Runnable {
         while (true) {
             try {
                 Thread.sleep(10);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-//            for (int i = 0; i < Main.maxPlayers; i++) {
-//                if (PlayersManager.connectedPlayers[i] == null) {
-//                    everyPlayersPosition[i] = null;
-//                    continue;
-//                }
-//                everyPlayersPosition[i] = PlayersManager.connectedPlayers[i].position;
-//            }
 
-            List<PlayerPosition> everyPlayerPosition = new ArrayList<>();
-            for (ConnectedPlayer connectedPlayer : PlayersManager.connectedPlayers) {
-                if (connectedPlayer != null) {
-                    everyPlayerPosition.add(connectedPlayer.position);
+                List<PlayerPositionWithID> playerPositionsWithID = new ArrayList<>();
+                for (ConnectedPlayer connectedPlayer : PlayersManager.connectedPlayers) {
+                    if (connectedPlayer != null) {
+                        PlayerPositionWithID playerPositionWithID = new PlayerPositionWithID();
+                        playerPositionWithID.i = connectedPlayer.index;
+                        playerPositionWithID.pos = connectedPlayer.position;
+
+                        playerPositionsWithID.add(playerPositionWithID);
+                    }
                 }
+                for (ConnectedPlayer connectedPlayer : PlayersManager.connectedPlayers) {
+                    if (connectedPlayer == null) continue;
+                    String jsonData = Main.jackson.writeValueAsString(playerPositionsWithID);
+                    SendPacket.SendUdp(3, jsonData, connectedPlayer);
+                }
+            } catch (InterruptedException | JsonProcessingException e) {
+                Shortcuts.PrintWithTime(e.toString());
             }
-
-            for (ConnectedPlayer connectedPlayer : PlayersManager.connectedPlayers) {
-                if (connectedPlayer == null) continue;
-                String jsonData = Main.gson.toJson(everyPlayerPosition);
-                SendPacket.SendUdp(3, jsonData, connectedPlayer);
-            }
-
         }
     }
 }

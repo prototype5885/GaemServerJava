@@ -1,11 +1,12 @@
 package org.ProToType.ClassesShared;
 
 public class InitialData {
-    public int rv;
-    public int i;
-    public int mp;
-    public int tr;
-    public PlayerData[] pda;
+    public int rv; // login result, response to the client about how the login went
+    public int i; // client index so player knows what slot he/she/it is in
+    public int mp; // max player amount so client will also know it
+    public int tr; // tick rate
+    public int up; // udp port
+    public PlayerData[] pda; // list of data of players, such as name
 
     public int getRv() {
         return rv;
@@ -45,5 +46,13 @@ public class InitialData {
 
     public void setPda(PlayerData[] pda) {
         this.pda = pda;
+    }
+
+    public int getUp() {
+        return up;
+    }
+
+    public void setUp(int up) {
+        this.up = up;
     }
 }
