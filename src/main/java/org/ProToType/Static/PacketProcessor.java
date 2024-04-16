@@ -1,83 +1,50 @@
 package org.ProToType.Static;
 
-import org.ProToType.Classes.ConnectedPlayer;
-import org.ProToType.Classes.Packet;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.ProToType.ClassesShared.Packet;
+import org.ProToType.Main;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 public class PacketProcessor {
-    public static void ProcessReceivedBytes(ConnectedPlayer connectedPlayer, byte[] buffer, int byteLength) {
+    private static final Logger logger = LogManager.getLogger(PacketProcessor.class);
+
+    public static String Decode(byte[] buffer, int byteLength) {
         // trims the buffer down
         byte[] receivedBytes = new byte[byteLength];
         System.arraycopy(buffer, 0, receivedBytes, 0, byteLength);
 
-        // Decrypts or decodes the message
-        String receivedBytesInString = Decode(receivedBytes);
+        logger.trace("Received bytes length: {}", byteLength);
 
-
-        // Separate if multiple packets were read as one
-        List<Packet> packets = SeparatePackets(receivedBytesInString);
-
-        // Processes each packet
-        for (Packet packet : packets) {
-            if (packet == null) continue;
-            ProcessDataSentByPlayer(packet, connectedPlayer);
-        }
-    }
-
-    public static String Decode(byte[] receivedBytes) {
-        String receivedBytesInString;
         if (Encryption.encryptionEnabled)
-            receivedBytesInString = Encryption.Decrypt(receivedBytes);
+            return Encryption.Decrypt(receivedBytes);
         else
-            receivedBytesInString = new String(receivedBytes, StandardCharsets.UTF_8);
-        return receivedBytesInString;
+            return new String(receivedBytes, StandardCharsets.UTF_8);
     }
-
-    public static List<Packet> SeparatePackets(String receivedBytesInString) {
-        String packetTypePattern = "#(.*?)#"; // pattern to read the packet type
-        String packetDataPattern = "\\$(.*?)\\$"; // pattern to read the packet data
-
-        Pattern typePattern = Pattern.compile(packetTypePattern);
-        Pattern dataPattern = Pattern.compile(packetDataPattern);
-
-        Matcher packetTypeMatches = typePattern.matcher(receivedBytesInString);
-        Matcher packetDataMatches = dataPattern.matcher(receivedBytesInString);
-
-        if (packetTypeMatches.groupCount() != packetDataMatches.groupCount()) return null;
-
+    
+    public static List<Packet> SeparatePackets(String decodedMessage) {
         List<Packet> packets = new ArrayList<>();
-        while (packetTypeMatches.find() && packetDataMatches.find()) {
-            int typeOfPacket = Integer.parseInt(packetTypeMatches.group(1));
 
-            Packet packet = new Packet();
-            packet.type = typeOfPacket;
-            packet.data = packetDataMatches.group(1);
+        String[] lines = decodedMessage.split("\n");
 
-            packets.add(packet);
+        int foundLines = 0;
+        for (String line : lines) {
+            try {
+                Packet packet = Main.jackson.readValue(line, Packet.class);
+                logger.trace("Separated packet line: {}, type: {}, json: {}", foundLines, packet.type, packet.json);
+                packets.add(packet);
+            } catch (JsonProcessingException e) {
+                logger.error("Error deserializing json line {}, json: {}", foundLines, line);
+            }
+            foundLines++;
+        }
+        if (foundLines > 1) {
+            logger.debug("Multiple packets were received as one");
         }
         return packets;
-    }
-
-    private static void ProcessDataSentByPlayer(Packet packet, ConnectedPlayer connectedPlayer) {
-//        System.out.println(packet.data);
-        switch (packet.type) {
-            case 0:
-                connectedPlayer.udpPingAnswered = true;
-                connectedPlayer.status = 1;
-                // Calculate latency here
-                break;
-            case 2:
-//                playersManager.SendChatMessageToEveryone(connectedPlayer, packet.data);
-                break;
-            case 3:
-                PlayersManager.UpdatePlayerPosition(connectedPlayer, packet.data);
-                break;
-        }
     }
 }

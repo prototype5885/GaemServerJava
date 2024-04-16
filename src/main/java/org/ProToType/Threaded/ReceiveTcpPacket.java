@@ -1,30 +1,42 @@
 package org.ProToType.Threaded;
 
+import org.ProToType.ClassesShared.Packet;
+import org.ProToType.Static.PacketProcessor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.ProToType.Classes.ConnectedPlayer;
 
-import org.ProToType.Static.*;
+import org.ProToType.Server;
+
+import java.util.List;
 
 
 public class ReceiveTcpPacket implements Runnable {
-    ConnectedPlayer connectedPlayer = new ConnectedPlayer();
+    private static final Logger logger = LogManager.getLogger(ReceiveTcpPacket.class);
 
-    public ReceiveTcpPacket(ConnectedPlayer connectedPlayer) {
+    Server server;
+    ConnectedPlayer connectedPlayer;
+
+    public ReceiveTcpPacket(Server server, ConnectedPlayer connectedPlayer) {
+        this.server = server;
         this.connectedPlayer = connectedPlayer;
     }
 
     @Override
     public void run() {
+        byte[] buffer = new byte[1024];
+        int bytesRead;
         try {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while (true) {
-                while ((bytesRead = connectedPlayer.inputStream.read(buffer)) != -1) {
-                    PacketProcessor.ProcessReceivedBytes(connectedPlayer, buffer, bytesRead);
-                }
+            while ((bytesRead = connectedPlayer.inputStream.read(buffer)) != -1) {
+                String decodedMessage = PacketProcessor.Decode(buffer, bytesRead);
+                List<Packet> packets = PacketProcessor.SeparatePackets(decodedMessage);
             }
         } catch (Exception e) {
-            Shortcuts.PrintWithTime("Error receiving Tcp packet, " + e.getMessage());
-            PlayersManager.DisconnectPlayer(connectedPlayer);
+            logger.debug("Error receiving Tcp packet, " + e.getMessage());
+        } finally {
+            server.RemovePlayerFromList(connectedPlayer);
+            server.DisconnectPlayer(connectedPlayer.tcpClientSocket);
         }
     }
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Properties>
+        <!-- Define the pattern -->
+        <Property name="pattern">%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n</Property>
+    </Properties>
+    <Appenders>
+        <!-- Console Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+
+        <!-- File Appender -->
+        <File name="LogFile" fileName="log.txt">
+            <PatternLayout pattern="${pattern}"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="all">
+            <!-- Reference to Console Appender -->
+            <AppenderRef ref="Console"/>
+
+            <!-- Reference to File Appender -->
+            <!--            <AppenderRef ref="LogFile"/>-->
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,5 +1,8 @@
 package org.ProToType.Static;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -7,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 public class Encryption {
+    private static final Logger logger = LogManager.getLogger(Encryption.class);
+
     private static final byte ivLength = 16;
     public static byte[] encryptionKey;
     public static boolean encryptionEnabled = true;
@@ -30,16 +35,20 @@ public class Encryption {
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(encryptionKey, "AES"), new IvParameterSpec(extractedIV));
             byte[] decryptedBytes = cipher.doFinal(encryptedMessage);
 
+            String decryptedMessage = new String(decryptedBytes, StandardCharsets.UTF_8);
+            logger.trace("Decrpyted message: {}", decryptedMessage.trim());
+
             // return as string
-            return new String(decryptedBytes, StandardCharsets.UTF_8);
+            return decryptedMessage;
         } catch (Exception e) {
-            Shortcuts.PrintWithTime("Decryption of a message failed");
+            logger.error("Decryption of a received message failed: {}", e.toString());
             return null;
         }
     }
 
     public static byte[] Encrypt(String message) {
         try {
+            logger.trace("Encrypting message {}...", message);
             // creates a random IV byte array
             byte[] randomIV = new byte[ivLength];
             new SecureRandom().nextBytes(randomIV);
@@ -54,10 +63,12 @@ public class Encryption {
             System.arraycopy(randomIV, 0, encryptedBytesWithIV, 0, ivLength);
             System.arraycopy(encryptedBytes, 0, encryptedBytesWithIV, ivLength, encryptedBytes.length);
 
+            logger.trace("Encryption of message {} was success, byte length: {}", message, encryptedBytesWithIV.length);
+
             // return the encrypted message as byte array
             return encryptedBytesWithIV;
         } catch (Exception e) {
-            Shortcuts.PrintWithTime("Encryption of a message failed");
+            logger.error("Encryption of a message {} failed: {}", message, e.toString());
             return null;
         }
     }
