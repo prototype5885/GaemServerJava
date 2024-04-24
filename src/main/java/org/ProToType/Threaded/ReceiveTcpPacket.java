@@ -1,6 +1,6 @@
 package org.ProToType.Threaded;
 
-import org.ProToType.ClassesShared.Packet;
+import org.ProToType.Classes.Packet;
 import org.ProToType.Static.PacketProcessor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,13 +29,14 @@ public class ReceiveTcpPacket implements Runnable {
         int bytesRead;
         try {
             while ((bytesRead = connectedPlayer.inputStream.read(buffer)) != -1) {
+                logger.trace("Received message from {}", connectedPlayer.playerName);
                 String decodedMessage = PacketProcessor.Decode(buffer, bytesRead);
-                List<Packet> packets = PacketProcessor.SeparatePackets(decodedMessage);
+                List<Packet> packets = PacketProcessor.SeparatePackets(decodedMessage, connectedPlayer);
+                server.packetsToProcess.addAll(packets);
             }
         } catch (Exception e) {
-            logger.debug("Error receiving Tcp packet, " + e.getMessage());
+            logger.debug("Error receiving Tcp packet: {}", e.toString());
         } finally {
-            server.RemovePlayerFromList(connectedPlayer);
             server.DisconnectPlayer(connectedPlayer.tcpClientSocket);
         }
     }

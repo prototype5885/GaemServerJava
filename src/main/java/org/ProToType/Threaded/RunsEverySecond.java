@@ -20,7 +20,7 @@ public class RunsEverySecond implements Runnable {
         while (true) {
             startTime = System.currentTimeMillis();
 
-            UpdatePositionInDatabase();
+//            UpdatePositionInDatabase();
 
             elapsedTime = System.currentTimeMillis() - startTime;
             sleepTime = 1000 - elapsedTime;

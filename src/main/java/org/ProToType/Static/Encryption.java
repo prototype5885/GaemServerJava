@@ -48,7 +48,7 @@ public class Encryption {
 
     public static byte[] Encrypt(String message) {
         try {
-            logger.trace("Encrypting message {}...", message);
+//            logger.trace("Encrypting message ...");
             // creates a random IV byte array
             byte[] randomIV = new byte[ivLength];
             new SecureRandom().nextBytes(randomIV);
@@ -63,7 +63,7 @@ public class Encryption {
             System.arraycopy(randomIV, 0, encryptedBytesWithIV, 0, ivLength);
             System.arraycopy(encryptedBytes, 0, encryptedBytesWithIV, ivLength, encryptedBytes.length);
 
-            logger.trace("Encryption of message {} was success, byte length: {}", message, encryptedBytesWithIV.length);
+//            logger.trace("Encryption of message {} was success, byte length: {}", message, encryptedBytesWithIV.length);
 
             // return the encrypted message as byte array
             return encryptedBytesWithIV;

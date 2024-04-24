@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.time.Instant;
 
 public class ConnectedPlayer {
+    public int index;
     public int databaseID;
     public String playerName;
     public Socket tcpClientSocket;

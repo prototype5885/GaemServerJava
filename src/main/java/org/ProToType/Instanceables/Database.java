@@ -24,39 +24,45 @@ public class Database {
         String dbUrl;
         String query;
 
+        String ipAddress;
+        String port;
+
+        String username;
+        String password;
+
         switch (configFile.databaseType) {
-//            case "h2":
-//                logger.debug("Connecting to local H2 database...");
-//                Class.forName("org.h2.Driver");
-//
-//                dbType = "jdbc:h2:";
-//                dbName = "./db/GaemServerDatabase";
-//                dbUrl = dbType + dbName;
-//
-//                dbConnection = DriverManager.getConnection(dbUrl);
-//
-//                query = InitialQuery("h2");
-//                dbConnection.createStatement().executeUpdate(query);
-//
-//                logger.info("Connected to local H2 database successfully");
-//                return;
-//            case "h2server":
-//                logger.debug("Connecting to H2 server database...");
-//                Class.forName("org.h2.Driver");
-//
-//                org.h2.tools.Server.createTcpServer("-tcp", "-ifNotExists").start();
-//
-//                dbType = "jdbc:h2:tcp://localhost/";
-//                dbName = "./db/GaemServerDatabase";
-//                dbUrl = dbType + dbName;
-//
-//                dbConnection = DriverManager.getConnection(dbUrl);
-//
-//                query = InitialQuery("h2");
-//                dbConnection.createStatement().executeUpdate(query);
-//
-//                logger.info("Connected to H2 server database successfully");
-//                return;
+            case "h2":
+                logger.debug("Connecting to local H2 database...");
+                Class.forName("org.h2.Driver");
+
+                dbType = "jdbc:h2:";
+                dbName = "./GaemServerDatabase.h2";
+                dbUrl = dbType + dbName;
+
+                dbConnection = DriverManager.getConnection(dbUrl);
+
+                query = InitialQuery("h2");
+                dbConnection.createStatement().executeUpdate(query);
+
+                logger.info("Connected to local H2 database successfully");
+                return;
+            case "h2server":
+                logger.debug("Connecting to H2 server database...");
+                Class.forName("org.h2.Driver");
+
+                org.h2.tools.Server.createTcpServer("-tcp", "-ifNotExists").start();
+
+                dbType = "jdbc:h2:tcp://localhost/";
+                dbName = "./GaemServerDatabase.h2";
+                dbUrl = dbType + dbName;
+
+                dbConnection = DriverManager.getConnection(dbUrl);
+
+                query = InitialQuery("h2");
+                dbConnection.createStatement().executeUpdate(query);
+
+                logger.info("Connected to H2 server database successfully");
+                return;
             case "sqlite":
                 logger.debug("Connecting to SQLite database...");
                 Class.forName("org.sqlite.JDBC");
@@ -74,17 +80,17 @@ public class Database {
                 break;
             case "mysql":
                 logger.debug("Connecting to MySQL database...");
-                Class.forName("com.mysql.cj.jdbc.Driver");
+//                Class.forName("com.mysql.cj.jdbc.Driver");
 
-                String ipAddress = configFile.remoteDatabaseIpAddress;
-                String port = configFile.remoteDatabasePort;
+                ipAddress = configFile.remoteDatabaseIpAddress;
+                port = configFile.remoteDatabasePort;
 
                 dbType = "jdbc:mysql://";
                 dbName = "/GaemServer";
                 dbUrl = dbType + ipAddress + ":" + port + dbName;
 
-                String username = configFile.dbUsername;
-                String password = configFile.dbPassword;
+                username = configFile.dbUsername;
+                password = configFile.dbPassword;
 
                 dbConnection = DriverManager.getConnection(dbUrl, username, password);
 
@@ -92,6 +98,27 @@ public class Database {
 
                 dbConnection.createStatement().executeUpdate(query);
                 logger.info("Connected to MySQL database successfully");
+                break;
+            case "mariadb":
+                logger.debug("Connecting to MariaDB database...");
+//                Class.forName("com.mysql.cj.jdbc.Driver");
+
+                ipAddress = configFile.remoteDatabaseIpAddress;
+                port = configFile.remoteDatabasePort;
+
+                dbType = "jdbc:mariadb://";
+                dbName = "/GaemServer";
+                dbUrl = dbType + ipAddress + ":" + port + dbName;
+
+                username = configFile.dbUsername;
+                password = configFile.dbPassword;
+
+                dbConnection = DriverManager.getConnection(dbUrl, username, password);
+
+                query = InitialQuery("mariadb");
+
+                dbConnection.createStatement().executeUpdate(query);
+                logger.info("Connected to MariaDB database successfully");
                 break;
             default:
                 String errorMsg = String.format("Database type - %s - could not have been loaded", configFile.databaseType);
@@ -102,9 +129,11 @@ public class Database {
 
     private String InitialQuery(String dbType) {
         logger.debug("Initial query to database, database type: {}", dbType);
-        String autoIncrement = "AUTO_INCREMENT";
-        if (dbType.equals("sqlite")) {
-            autoIncrement = "AUTOINCREMENT";
+
+        String autoIncrement = "AUTOINCREMENT";
+
+        if (!dbType.equals("sqlite")) {
+            autoIncrement = "AUTO_INCREMENT";
         }
 
         return "CREATE TABLE IF NOT EXISTS Players " +

@@ -1,7 +1,8 @@
 package org.ProToType.Static;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.ProToType.ClassesShared.Packet;
+import org.ProToType.Classes.ConnectedPlayer;
+import org.ProToType.Classes.Packet;
 import org.ProToType.Main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,27 +19,38 @@ public class PacketProcessor {
         byte[] receivedBytes = new byte[byteLength];
         System.arraycopy(buffer, 0, receivedBytes, 0, byteLength);
 
-        logger.trace("Received bytes length: {}", byteLength);
-
+        String decodedMessage = "";
         if (Encryption.encryptionEnabled)
-            return Encryption.Decrypt(receivedBytes);
+            decodedMessage = Encryption.Decrypt(receivedBytes);
         else
-            return new String(receivedBytes, StandardCharsets.UTF_8);
+            decodedMessage = new String(receivedBytes, StandardCharsets.UTF_8);
+
+        if (decodedMessage != null) {
+            logger.trace("Received bytes length: {}, decoded message length: {}", byteLength, decodedMessage.length());
+        } else {
+            logger.warn("Received message after decoding is null");
+        }
+        return decodedMessage;
     }
-    
-    public static List<Packet> SeparatePackets(String decodedMessage) {
+
+    public static List<Packet> SeparatePackets(String decodedMessage, ConnectedPlayer owner) {
         List<Packet> packets = new ArrayList<>();
 
-        String[] lines = decodedMessage.split("\n");
+        String[] lines = decodedMessage.trim().split("\n");
 
         int foundLines = 0;
         for (String line : lines) {
+            String[] splitLine = line.split("\\\\p");
             try {
-                Packet packet = Main.jackson.readValue(line, Packet.class);
-                logger.trace("Separated packet line: {}, type: {}, json: {}", foundLines, packet.type, packet.json);
+                Packet packet = new Packet();
+                packet.type = Integer.parseInt(splitLine[0]);
+                packet.owner = owner;
+                packet.json = splitLine[1];
+
+                logger.trace("Separated packet, line: {}, type: {}, json: {}", foundLines, packet.type, packet.json);
                 packets.add(packet);
-            } catch (JsonProcessingException e) {
-                logger.error("Error deserializing json line {}, json: {}", foundLines, line);
+            } catch (NumberFormatException e) {
+                logger.error("Error parsing integer from value: {}, in line {}", splitLine[0], foundLines);
             }
             foundLines++;
         }
@@ -46,5 +58,15 @@ public class PacketProcessor {
             logger.debug("Multiple packets were received as one");
         }
         return packets;
+    }
+
+    public static byte[] MakePacketForSending(int type, Object object) throws JsonProcessingException {
+        String messageString = type + "\\p" + Main.jackson.writeValueAsString(object) + "\n";
+
+        if (Encryption.encryptionEnabled) {
+            return Encryption.Encrypt(messageString);
+        } else {
+            return (messageString).getBytes();
+        }
     }
 }

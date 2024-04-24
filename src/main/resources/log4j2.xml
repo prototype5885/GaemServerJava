@@ -20,7 +20,7 @@
             <!-- Reference to Console Appender -->
             <AppenderRef ref="Console"/>
 
-            <!-- Reference to File Appender -->
+            <!--             Reference to File Appender -->
             <!--            <AppenderRef ref="LogFile"/>-->
         </Root>
     </Loggers>
