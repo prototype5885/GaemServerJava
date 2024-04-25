@@ -8,6 +8,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Encryption {
     private static final Logger logger = LogManager.getLogger(Encryption.class);
@@ -46,9 +48,9 @@ public class Encryption {
         }
     }
 
-    public static byte[] Encrypt(String message) {
+    public static byte[] Encrypt(String messageString) {
         try {
-//            logger.trace("Encrypting message ...");
+            logger.trace("Encrypting message ...");
             // creates a random IV byte array
             byte[] randomIV = new byte[ivLength];
             new SecureRandom().nextBytes(randomIV);
@@ -56,19 +58,19 @@ public class Encryption {
             // encrypt the string message
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(encryptionKey, "AES"), new IvParameterSpec(randomIV));
-            byte[] encryptedBytes = cipher.doFinal(message.getBytes());
+            byte[] encryptedBytes = cipher.doFinal(messageString.getBytes());
 
             // combines the IV byte array and the encrypted message byte array, the IV array is first, message is second
             byte[] encryptedBytesWithIV = new byte[encryptedBytes.length + ivLength];
             System.arraycopy(randomIV, 0, encryptedBytesWithIV, 0, ivLength);
             System.arraycopy(encryptedBytes, 0, encryptedBytesWithIV, ivLength, encryptedBytes.length);
 
-//            logger.trace("Encryption of message {} was success, byte length: {}", message, encryptedBytesWithIV.length);
+            logger.trace("Encryption of message {} was success, byte length: {}", messageString, encryptedBytesWithIV.length);
 
             // return the encrypted message as byte array
             return encryptedBytesWithIV;
         } catch (Exception e) {
-            logger.error("Encryption of a message {} failed: {}", message, e.toString());
+            logger.error("Encryption of a message {} failed: {}", messageString, e.toString());
             return null;
         }
     }

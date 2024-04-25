@@ -2,6 +2,7 @@ package org.ProToType.Classes;
 
 import org.ProToType.ClassesShared.PlayerPosition;
 
+import javax.net.ssl.SSLSocket;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;

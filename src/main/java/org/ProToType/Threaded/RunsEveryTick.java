@@ -53,7 +53,7 @@ public class RunsEveryTick implements Runnable {
             // sends it to each connected players
             for (ConnectedPlayer connectedPlayer : server.connectedPlayers) {
                 if (connectedPlayer != null) {
-//                    server.SendTcp(bytesToSend, connectedPlayer.tcpClientSocket);
+                    server.SendTcp(bytesToSend, connectedPlayer.tcpClientSocket);
                 }
             }
         }

@@ -8,19 +8,15 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.ProToType.Classes.ConnectedPlayer;
-import org.ProToType.Classes.LoginResult;
 import org.ProToType.Instanceables.ConfigFile;
 import org.ProToType.Instanceables.Database;
 import org.ProToType.Static.*;
-import org.ProToType.Threaded.ReceiveTcpPacket;
 import org.ProToType.Threaded.RunsEverySecond;
 import org.ProToType.Threaded.RunsEveryTick;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -82,8 +78,8 @@ public class Server {
         database.ConnectToDatabase(configFile);
 
 //        Thread.ofVirtual().start(new ReceiveUdpPacket(playersManager));
-        Thread.ofVirtual().start(new RunsEveryTick(this));
-        Thread.ofVirtual().start(new RunsEverySecond(this));
+//        Thread.ofVirtual().start(new RunsEveryTick(this));
+//        Thread.ofVirtual().start(new RunsEverySecond(this));
         Thread.ofVirtual().start(new WaitForPlayerToConnect(this));
 
         while (true) {

@@ -30,8 +30,7 @@ public class ReceiveTcpPacket implements Runnable {
         try {
             while ((bytesRead = connectedPlayer.inputStream.read(buffer)) != -1) {
                 logger.trace("Received message from {}", connectedPlayer.playerName);
-                String decodedMessage = PacketProcessor.Decode(buffer, bytesRead);
-                List<Packet> packets = PacketProcessor.SeparatePackets(decodedMessage, connectedPlayer);
+                List<Packet> packets = PacketProcessor.ProcessReceivedBytes(buffer, bytesRead, connectedPlayer);
                 server.packetsToProcess.addAll(packets);
             }
         } catch (Exception e) {

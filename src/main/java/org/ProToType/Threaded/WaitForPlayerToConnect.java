@@ -92,8 +92,7 @@ public class WaitForPlayerToConnect implements Runnable {
 
         // read and process the LoginData sent by the player
         logger.debug("Processing received LoginData from {}...", clientIpAddress);
-        String decodedMessage = PacketProcessor.Decode(buffer, bytesRead);
-        List<Packet> packets = PacketProcessor.SeparatePackets(decodedMessage, null);
+        List<Packet> packets = PacketProcessor.ProcessReceivedBytes(buffer, bytesRead, null);
 
         LoginData loginData = null;
         for (Packet packet : packets) {
