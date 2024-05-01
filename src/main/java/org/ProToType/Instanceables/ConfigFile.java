@@ -14,7 +14,7 @@ public class ConfigFile {
     public int tcpPort;
     public int tickRate;
     public int maxPlayers;
-    public String encryptionKey;
+    //    public String encryptionKey;
     public String databaseType;
     public String remoteDatabaseIpAddress;
     public String remoteDatabasePort;
@@ -79,9 +79,9 @@ public class ConfigFile {
                     case maxPlayersString:
                         maxPlayers = Integer.parseInt(parts[1].trim());
                         break;
-                    case encryptionKeyString:
-                        encryptionKey = parts[1].trim();
-                        break;
+//                    case encryptionKeyString:
+//                        encryptionKey = parts[1].trim();
+//                        break;
                     case databaseTypeString:
                         databaseType = parts[1].trim();
                         break;
@@ -122,11 +122,11 @@ public class ConfigFile {
             missingValues.add(maxPlayersString);
         }
 
-        if (encryptionKey != null) {
-            logger.debug("{}: {}", encryptionKeyString, encryptionKey);
-        } else {
-            missingValues.add(encryptionKeyString);
-        }
+//        if (encryptionKey != null) {
+//            logger.debug("{}: {}", encryptionKeyString, encryptionKey);
+//        } else {
+//            missingValues.add(encryptionKeyString);
+//        }
 
         if (databaseType != null) {
             logger.debug("{}: {}", databaseTypeString, databaseType);

@@ -32,28 +32,25 @@ public class RunsEveryTick implements Runnable {
 
             // puts all the connected players' position in a list
             List<PlayerPositionWithID> playerPositionsWithID = new ArrayList<>();
-            for (int i = 0; i < server.maxPlayers; i++) {
-                if (server.connectedPlayers[i] != null) {
+            for (ConnectedPlayer connectedPlayer : server.connectedPlayers) {
+                if (connectedPlayer != null) {
                     PlayerPositionWithID playerPositionWithID = new PlayerPositionWithID();
-                    playerPositionWithID.i = i;
-                    playerPositionWithID.pos = server.connectedPlayers[i].position;
+                    playerPositionWithID.i = connectedPlayer.index;
+                    playerPositionWithID.pos = connectedPlayer.position;
 
                     playerPositionsWithID.add(playerPositionWithID);
                 }
             }
 
-            byte[] bytesToSend = null;
-            try {
-                bytesToSend = PacketProcessor.MakePacketForSending(4, playerPositionsWithID);
-            } catch (JsonProcessingException e) {
-                logger.error(e.toString());
-                continue;
-            }
-
             // sends it to each connected players
             for (ConnectedPlayer connectedPlayer : server.connectedPlayers) {
                 if (connectedPlayer != null) {
-                    server.SendTcp(bytesToSend, connectedPlayer.tcpClientSocket);
+                    try {
+                        byte[] bytesToSend = PacketProcessor.MakePacketForSending(4, playerPositionsWithID, connectedPlayer.aesKey);
+                        server.SendTcp(bytesToSend, connectedPlayer.tcpClientSocket);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         }

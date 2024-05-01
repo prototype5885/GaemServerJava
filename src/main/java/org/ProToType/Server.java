@@ -2,7 +2,7 @@ package org.ProToType;
 
 import org.ProToType.Classes.Packet;
 import org.ProToType.ClassesShared.*;
-import org.ProToType.Threaded.WaitForPlayerToConnect;
+import org.ProToType.Threaded.HandleNewPlayers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,8 +11,6 @@ import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Instanceables.ConfigFile;
 import org.ProToType.Instanceables.Database;
 import org.ProToType.Static.*;
-import org.ProToType.Threaded.RunsEverySecond;
-import org.ProToType.Threaded.RunsEveryTick;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -60,7 +58,8 @@ public class Server {
 
         // reads and sets up stuff from config file
         ConfigFile configFile = new ConfigFile();
-        Encryption.SetEncryptionKey(configFile.encryptionKey);
+        EncryptionAES.InitializeAES();
+        EncryptionRSA.InitializeRSA();
         maxPlayers = configFile.maxPlayers;
         tickRate = configFile.tickRate;
         tcpPort = configFile.tcpPort;
@@ -80,7 +79,7 @@ public class Server {
 //        Thread.ofVirtual().start(new ReceiveUdpPacket(playersManager));
 //        Thread.ofVirtual().start(new RunsEveryTick(this));
 //        Thread.ofVirtual().start(new RunsEverySecond(this));
-        Thread.ofVirtual().start(new WaitForPlayerToConnect(this));
+        Thread.ofVirtual().start(new HandleNewPlayers(this));
 
         while (true) {
             ProcessPacketsSentByPlayers();
@@ -96,31 +95,27 @@ public class Server {
         // making a list
         logger.debug("Making list of connected players...");
         List<PlayerData> playerDataList = new ArrayList<>();
-        for (int i = 0; i < maxPlayers; i++) {
-            if (connectedPlayers[i] == null) continue;
+        for (ConnectedPlayer player : connectedPlayers) {
+            if (player == null) continue;
 
             PlayerData playerData = new PlayerData();
-            playerData.i = i;
-            playerData.un = connectedPlayers[i].playerName;
+            playerData.i = player.index;
+            playerData.un = player.playerName;
 
             playerDataList.add(playerData);
         }
-        // making it into a package
-        byte[] bytesToSend = null;
-        try {
-            bytesToSend = PacketProcessor.MakePacketForSending(2, playerDataList);
-        } catch (JsonProcessingException e) {
-            logger.error(e.toString());
-            return;
-        }
-        if (bytesToSend == null) return;
 
-        // sending it
+        // sending it to each player
         logger.debug("Sending it to each player...");
-        for (int i = 0; i < maxPlayers; i++) {
-            if (connectedPlayers[i] != null) {
-                logger.debug("Sending it to: {}", connectedPlayers[i].playerName);
-                SendTcp(bytesToSend, connectedPlayers[i].tcpClientSocket);
+        for (ConnectedPlayer player : connectedPlayers) {
+            if (player != null) {
+                logger.debug("Sending it to: {}", player.playerName);
+                try {
+                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(2, playerDataList, player.aesKey);
+                    SendTcp(bytesToSend, player.tcpClientSocket);
+                } catch (Exception e) {
+                    logger.error(e.toString());
+                }
             }
         }
     }
@@ -220,12 +215,13 @@ public class Server {
             chatMessage.i = msgSender.index;
 
             // makes package
-            byte[] bytesToSend = PacketProcessor.MakePacketForSending(2, chatMessage);
+
 
             // send the message to each connected player
             logger.trace("Sending chat message from {} to all players...", msgSender.playerName);
             for (ConnectedPlayer player : connectedPlayers) {
                 if (player != null) {
+                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(2, chatMessage, player.aesKey);
                     SendTcp(bytesToSend, player.tcpClientSocket);
                 }
             }

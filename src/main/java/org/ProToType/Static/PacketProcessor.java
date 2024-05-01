@@ -15,11 +15,11 @@ import java.util.List;
 public class PacketProcessor {
     private static final Logger logger = LogManager.getLogger(PacketProcessor.class);
 
-    public static byte[] MakePacketForSending(int type, Object object) throws JsonProcessingException {
+    public static byte[] MakePacketForSending(int type, Object object, byte[] aesKey) throws JsonProcessingException {
         String messageString = type + "\\p" + Main.jackson.writeValueAsString(object);
 
-        if (Encryption.encryptionEnabled) {
-            byte[] encryptedMessageBytes = Encryption.Encrypt(messageString);
+        if (EncryptionAES.encryptionEnabled) {
+            byte[] encryptedMessageBytes = EncryptionAES.Encrypt(messageString, aesKey);
             byte[] encryptedMessageBytesWithLength = AppendLengthToBeginning(encryptedMessageBytes);
             return encryptedMessageBytesWithLength;
         } else {
@@ -34,7 +34,6 @@ public class PacketProcessor {
 
         byte[] receivedBytes = new byte[byteLength];
         System.arraycopy(buffer, 0, receivedBytes, 0, byteLength);
-
 
         // the list that will hold the separated encrypted packets
         List<byte[]> separatedPacketBytes = new ArrayList<>();
@@ -57,9 +56,9 @@ public class PacketProcessor {
             logger.trace("Separated encrypted packet, start index: {}, length: {}", currentIndex, length);
             currentIndex += length + 2;
         }
-        if (Encryption.encryptionEnabled) { // if encryption is enabled
+        if (EncryptionAES.encryptionEnabled) { // if encryption is enabled
             for (byte[] encryptedPacketBytes : separatedPacketBytes) {
-                jsonPackets.add(Encryption.Decrypt(encryptedPacketBytes));
+                jsonPackets.add(EncryptionAES.DecryptString(encryptedPacketBytes, packetOwner.aesKey));
             }
         } else { // if encryption is disabled
             for (byte[] packetBytes : separatedPacketBytes) {

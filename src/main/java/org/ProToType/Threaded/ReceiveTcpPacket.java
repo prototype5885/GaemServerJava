@@ -9,6 +9,8 @@ import org.ProToType.Classes.ConnectedPlayer;
 
 import org.ProToType.Server;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.List;
 
 
@@ -28,7 +30,7 @@ public class ReceiveTcpPacket implements Runnable {
         byte[] buffer = new byte[1024];
         int bytesRead;
         try {
-            while ((bytesRead = connectedPlayer.inputStream.read(buffer)) != -1) {
+            while ((bytesRead = connectedPlayer.tcpClientSocket.getInputStream().read(buffer)) != -1) {
                 logger.trace("Received message from {}", connectedPlayer.playerName);
                 List<Packet> packets = PacketProcessor.ProcessReceivedBytes(buffer, bytesRead, connectedPlayer);
                 server.packetsToProcess.addAll(packets);
@@ -38,5 +40,14 @@ public class ReceiveTcpPacket implements Runnable {
         } finally {
             server.DisconnectPlayer(connectedPlayer.tcpClientSocket);
         }
+    }
+
+    public static byte[] ReceiveBytes(Socket tcpClientSocket) throws IOException {
+        byte[] buffer = new byte[2048];
+        int bytesRead = tcpClientSocket.getInputStream().read(buffer);
+        byte[] receivedBytes = new byte[bytesRead];
+        System.arraycopy(buffer, 0, receivedBytes, 0, bytesRead);
+
+        return receivedBytes;
     }
 }
