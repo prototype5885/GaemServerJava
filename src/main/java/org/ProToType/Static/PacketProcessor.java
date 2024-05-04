@@ -15,78 +15,30 @@ import java.util.List;
 public class PacketProcessor {
     private static final Logger logger = LogManager.getLogger(PacketProcessor.class);
 
-    public static byte[] MakePacketForSending(int type, Object object, byte[] aesKey) throws JsonProcessingException {
-        String messageString = type + "\\p" + Main.jackson.writeValueAsString(object);
+    public static byte[] MakePacketForSending(int type, Object obj, byte[] aesKey) throws JsonProcessingException {
+//        String messageString = type + "\\p" + Main.jackson.writeValueAsString(obj);
 
-        if (EncryptionAES.encryptionEnabled) {
-            byte[] encryptedMessageBytes = EncryptionAES.Encrypt(messageString, aesKey);
-            byte[] encryptedMessageBytesWithLength = AppendLengthToBeginning(encryptedMessageBytes);
-            return encryptedMessageBytesWithLength;
-        } else {
-            byte[] messageBytes = messageString.getBytes();
-            byte[] messageBytesWithlength = AppendLengthToBeginning(messageBytes);
-            return messageBytesWithlength;
-        }
+        byte[] jsonBytes = AppendPacketType(type, Main.jackson.writeValueAsBytes(obj));
+
+        if (EncryptionAES.encryptionEnabled) jsonBytes = EncryptionAES.Encrypt(jsonBytes, aesKey);
+        
+        return AppendLengthToBeginning(jsonBytes);
     }
 
-    public static List<Packet> ProcessReceivedBytes(byte[] buffer, int byteLength, ConnectedPlayer packetOwner) {
-        List<String> jsonPackets = new ArrayList<>();
+    private static byte[] AppendPacketType(int packetType, byte[] jsonBytes) {
+        // stores int in a 1 byte length array
+        byte[] arrayThatHoldsPacketType = new byte[1];
+        arrayThatHoldsPacketType[0] = (byte) packetType;
 
-        byte[] receivedBytes = new byte[byteLength];
-        System.arraycopy(buffer, 0, receivedBytes, 0, byteLength);
+        // creates an array that will hold both the length and the encrypted message
+        byte[] jsonWithType = new byte[1 + jsonBytes.length];
 
-        // the list that will hold the separated encrypted packets
-        List<byte[]> separatedPacketBytes = new ArrayList<>();
+        // copies the 1 byte packet type value array to the beginning
+        System.arraycopy(arrayThatHoldsPacketType, 0, jsonWithType, 0, 1);
+        // copies the encrypted message to after the second byte
+        System.arraycopy(jsonBytes, 0, jsonWithType, 1, jsonBytes.length);
 
-        int currentIndex = 0;
-        while (currentIndex < receivedBytes.length) {
-            // creates a 2 byte length array that stores the value read from the first 2 bytes of the given array
-            byte[] arrayThatHoldsLength = new byte[2];
-            System.arraycopy(receivedBytes, currentIndex, arrayThatHoldsLength, 0, 2);
-
-            // reads the int from the 2 byte length holder array
-            int length = 0;
-            length |= (arrayThatHoldsLength[0] & 0xFF) << 8;
-            length |= (arrayThatHoldsLength[1] & 0xFF);
-
-            byte[] encryptedPacket = new byte[length];
-            System.arraycopy(receivedBytes, currentIndex + 2, encryptedPacket, 0, length);
-
-            separatedPacketBytes.add(encryptedPacket);
-            logger.trace("Separated encrypted packet, start index: {}, length: {}", currentIndex, length);
-            currentIndex += length + 2;
-        }
-        if (EncryptionAES.encryptionEnabled) { // if encryption is enabled
-            for (byte[] encryptedPacketBytes : separatedPacketBytes) {
-                jsonPackets.add(EncryptionAES.DecryptString(encryptedPacketBytes, packetOwner.aesKey));
-            }
-        } else { // if encryption is disabled
-            for (byte[] packetBytes : separatedPacketBytes) {
-                jsonPackets.add(new String(packetBytes, StandardCharsets.UTF_8));
-            }
-        }
-        List<Packet> packets = new ArrayList<>();
-
-        int foundLines = 0;
-        for (String jsonPacket : jsonPackets) {
-            String[] splitLine = jsonPacket.split("\\\\p");
-            try {
-                Packet packet = new Packet();
-                packet.type = Integer.parseInt(splitLine[0]);
-                packet.owner = packetOwner;
-                packet.json = splitLine[1];
-
-                logger.trace("Separated packet, line: {}, type: {}, json: {}", foundLines, packet.type, packet.json);
-                packets.add(packet);
-            } catch (NumberFormatException e) {
-                logger.error("Error parsing integer from value: {}, in line {}", splitLine[0], foundLines);
-            }
-            foundLines++;
-        }
-        if (foundLines > 1) {
-            logger.debug("Multiple packets were received as one, packets: {}", foundLines);
-        }
-        return packets;
+        return jsonWithType;
     }
 
     private static byte[] AppendLengthToBeginning(byte[] encryptedMessageBytes) {
@@ -96,7 +48,7 @@ public class PacketProcessor {
         arrayThatHoldsLength[1] = (byte) encryptedMessageBytes.length;
 
         // creates an array that will hold both the length and the encrypted message
-        byte[] mergedArray = new byte[encryptedMessageBytes.length + 2];
+        byte[] mergedArray = new byte[2 + encryptedMessageBytes.length];
 
         // copies the 2 byte length holder array to the beginning
         System.arraycopy(arrayThatHoldsLength, 0, mergedArray, 0, 2);
@@ -105,5 +57,70 @@ public class PacketProcessor {
         System.arraycopy(encryptedMessageBytes, 0, mergedArray, 2, encryptedMessageBytes.length);
 
         return mergedArray;
+    }
+
+    public static List<Packet> ProcessReceivedBytes(byte[] buffer, int byteLength, ConnectedPlayer packetOwner) {
+        // trims the buffer
+        byte[] receivedBytes = new byte[byteLength];
+        System.arraycopy(buffer, 0, receivedBytes, 0, byteLength);
+
+        // the list that will hold the separated packets
+        List<Packet> packets = new ArrayList<>();
+
+        int currentIndex = 0;
+        int foundPackets = 0;
+        while (currentIndex < receivedBytes.length) {
+            Packet packet = new Packet();
+            packet.owner = packetOwner;
+
+            // creates a 2 byte length array that stores the value read from the first 2 bytes of the given array
+            byte[] arrayThatHoldsLength = new byte[2];
+            System.arraycopy(receivedBytes, currentIndex, arrayThatHoldsLength, 0, 2);
+
+            // reads the int from the 2 byte length holder array
+            int length = 0;
+            length |= (arrayThatHoldsLength[0] & 0xFF) << 8;
+            length |= (arrayThatHoldsLength[1] & 0xFF);
+            logger.trace("Received packet length: {}", length);
+
+            // separate the packet part from the length
+            byte[] packetBytes = new byte[length];
+            System.arraycopy(receivedBytes, currentIndex + 2, packetBytes, 0, length);
+            logger.trace("Separated packet from length:");
+            ByteProcessor.PrintByteArrayAsHex(packetBytes);
+
+            // decrypt if encrypted
+            if (EncryptionAES.encryptionEnabled) { // if encryption is enabled
+                packetBytes = EncryptionAES.Decrypt(packetBytes, packetOwner.aesKey);
+            }
+
+            logger.trace("Decrypted packet:");
+            ByteProcessor.PrintByteArrayAsHex(packetBytes);
+
+            // read the first byte to get packet type
+            packet.type = packetBytes[0] & 0xFF;
+            int packetLength = packetBytes.length - 1;
+            logger.trace("Packet type is: {}", packet.type);
+
+            // read the rest of the byte array
+            byte[] jsonBytes = new byte[packetLength];
+            System.arraycopy(packetBytes, 1, jsonBytes, 0, packetLength);
+            logger.trace("Message part in bytes:");
+            ByteProcessor.PrintByteArrayAsHex(packetBytes);
+
+            // decode into json string
+            packet.json = new String(jsonBytes, StandardCharsets.UTF_8);
+            logger.trace("Json: {}", packet.json);
+
+            packets.add(packet);
+
+            logger.trace("Separated packet, start index: {}, length: {}", currentIndex, length);
+            currentIndex += length + 2;
+            foundPackets++;
+        }
+        if (foundPackets > 1) {
+            logger.debug("Multiple packets were received as one, packets: {}", foundPackets);
+        }
+        return packets;
     }
 }

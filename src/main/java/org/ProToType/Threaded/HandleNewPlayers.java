@@ -14,6 +14,7 @@ import org.ProToType.Static.EncryptionRSA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -46,8 +47,11 @@ public class HandleNewPlayers implements Runnable {
                 logger.info("A player from ip {} connected...", tcpClientSocket.getInetAddress());
 
                 // starts RSA handshake that will return the AES and RSA encryption keys
-                byte[] aesKey = ExchangeSymmetricKey(tcpClientSocket);
-                ByteProcessor.PrintByteArrayAsHex(aesKey);
+                byte[] aesKey = new byte[]{};
+                if (EncryptionAES.encryptionEnabled) {
+                    aesKey = ExchangeSymmetricKey(tcpClientSocket);
+                    ByteProcessor.PrintByteArrayAsHex(aesKey);
+                }
 
                 // starts the authentication that will return player instance on success
                 ConnectedPlayer connectedPlayer = StartAuthentication(tcpClientSocket, aesKey);
@@ -74,13 +78,14 @@ public class HandleNewPlayers implements Runnable {
         logger.debug("Waiting for {} to send a handshake request...", clientIpAddress);
 
         byte[] aloReceivedBytes = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
+        aloReceivedBytes = EncryptionAES.Decrypt(aloReceivedBytes, "zTF7QCAw5amV7OxHQKE82rZKwebXrPkp".getBytes());
 
-        logger.trace("Received message {} from {}", new String(aloReceivedBytes, StandardCharsets.UTF_8), clientIpAddress);
         if (!Arrays.equals(aloReceivedBytes, "alo".getBytes())) {
             logger.error("Improper handshake request received from {}, aborting handshake", clientIpAddress);
             server.DisconnectPlayer(tcpClientSocket);
             return null;
         }
+
         logger.debug("Handshake request received from {}, " +
                 "sending public key to the player...", clientIpAddress);
         logger.debug("Printing own key of length {}", EncryptionRSA.keypair.getPublic().getEncoded().length);
@@ -90,7 +95,6 @@ public class HandleNewPlayers implements Runnable {
 
         // waiting for player to send its own public key
         logger.debug("Waiting now for {} to send it's own public key...", clientIpAddress);
-
 
         byte[] encryptedKeys = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
 

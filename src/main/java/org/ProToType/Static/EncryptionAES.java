@@ -35,7 +35,7 @@ public class EncryptionAES {
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
-    public static byte[] Encrypt(String messageString, byte[] encryptionKey) {
+    public static byte[] Encrypt(byte[] messageBytes, byte[] encryptionKey) {
         try {
             // creates a random IV byte array
             byte[] randomIV = new byte[keyLength];
@@ -44,7 +44,7 @@ public class EncryptionAES {
             // encrypt the string message
             SecretKeySpec secretKeySpec = new SecretKeySpec(encryptionKey, "AES");
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(randomIV));
-            byte[] encryptedBytes = cipher.doFinal(messageString.getBytes());
+            byte[] encryptedBytes = cipher.doFinal(messageBytes);
 
             // combines the IV byte array and the encrypted message byte array, the IV array is first, message is second
             byte[] encryptedBytesWithIV = new byte[encryptedBytes.length + keyLength];
