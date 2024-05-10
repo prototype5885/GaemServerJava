@@ -14,10 +14,8 @@ import org.ProToType.Static.EncryptionRSA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
@@ -58,6 +56,7 @@ public class HandleNewPlayers implements Runnable {
 
                 if (connectedPlayer != null) {
                     logger.info("Authentication of {} ({}) was success", tcpClientSocket.getInetAddress(), connectedPlayer.playerName);
+                    server.SendDataOfConnectedPlayers();
                     Thread.ofVirtual().start(new ReceiveTcpPacket(server, connectedPlayer));
 //                    new Thread(new ReceiveTcpPacket(this, connectedPlayer)).start();
                 } else {
@@ -70,79 +69,6 @@ public class HandleNewPlayers implements Runnable {
                 logger.error("Exception during authentication of {}, aborting... ", e.toString());
             }
         }
-    }
-
-    private byte[] ExchangeSymmetricKey(Socket tcpClientSocket) throws Exception {
-        String clientIpAddress = tcpClientSocket.getInetAddress().toString();
-        // Processing handshake request sent by the connecting player
-        logger.debug("Waiting for {} to send a handshake request...", clientIpAddress);
-
-        byte[] aloReceivedBytes = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
-        aloReceivedBytes = EncryptionAES.Decrypt(aloReceivedBytes, "zTF7QCAw5amV7OxHQKE82rZKwebXrPkp".getBytes());
-
-        if (!Arrays.equals(aloReceivedBytes, "alo".getBytes())) {
-            logger.error("Improper handshake request received from {}, aborting handshake", clientIpAddress);
-            server.DisconnectPlayer(tcpClientSocket);
-            return null;
-        }
-
-        logger.debug("Handshake request received from {}, " +
-                "sending public key to the player...", clientIpAddress);
-        logger.debug("Printing own key of length {}", EncryptionRSA.keypair.getPublic().getEncoded().length);
-
-        // sending public key to player
-        server.SendTcp(EncryptionRSA.keypair.getPublic().getEncoded(), tcpClientSocket);
-
-        // waiting for player to send its own public key
-        logger.debug("Waiting now for {} to send it's own public key...", clientIpAddress);
-
-        byte[] encryptedKeys = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
-
-        // separate
-        logger.trace("Separating encrypted client rsa public key...");
-        byte[] encryptedClientPublicKey = new byte[576];
-        System.arraycopy(encryptedKeys, 0, encryptedClientPublicKey, 0, 576);
-
-        logger.trace("Separating encrypted client aes key...");
-        byte[] encryptedClientAesKey = new byte[512];
-        System.arraycopy(encryptedKeys, 576, encryptedClientAesKey, 0, 512);
-
-        byte[] decryptedAesKey = EncryptionRSA.Decrypt(encryptedClientAesKey);
-        byte[] decryptedClientPublicKey = EncryptionAES.Decrypt(encryptedClientPublicKey, decryptedAesKey);
-
-
-        // decrypting the public key using local private key
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(decryptedClientPublicKey);
-        PublicKey clientPublicKey = KeyFactory.getInstance("RSA").generatePublic(x509EncodedKeySpec);
-
-        // sending a unique AES key to the player encrypted using the player's public key
-        logger.debug("Sending a random AES key to {}", clientIpAddress);
-        byte[] aesKey = EncryptionAES.GenerateRandomKey();
-        byte[] encryptedAesKey = EncryptionRSA.Encrypt(aesKey, clientPublicKey);
-        server.SendTcp(encryptedAesKey, tcpClientSocket);
-
-        // testing if it works
-//        logger.debug("Sending test...");
-//        byte[] encryptedBytes = EncryptionAES.Encrypt("test from server", aesKey);
-//        server.SendTcp(encryptedBytes, tcpClientSocket);
-//
-//        logger.trace("Waiting for response...");
-//        byte[] testReceivedBytes = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
-//
-//        logger.debug("Decrypting response...");
-//        String decodedMessage = EncryptionAES.DecryptString(testReceivedBytes, aesKey);
-//
-//        logger.debug("Checking if test was successful...");
-//        if (!decodedMessage.equals("test from client")) {
-//            logger.error("Test failed, string doesn't match, aborting handshake");
-//            server.DisconnectPlayer(tcpClientSocket);
-//            return null;
-//        }
-
-        // success
-        logger.debug("RSA handshake was successful with {}", clientIpAddress);
-
-        return aesKey;
     }
 
     private ConnectedPlayer StartAuthentication(Socket tcpClientSocket, byte[] aesKey) throws SQLException, IOException {
@@ -175,12 +101,11 @@ public class HandleNewPlayers implements Runnable {
 
         // Reading LoginData sent by the player
         logger.debug("Reading LoginData sent by {}", clientIpAddress);
-        byte[] buffer = new byte[512];
-        int bytesRead = tcpClientSocket.getInputStream().read(buffer);
+        byte[] receivedBytes = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
 
         // read and process the LoginData sent by the player
         logger.debug("Processing received LoginData from {}...", clientIpAddress);
-        List<Packet> packets = PacketProcessor.ProcessReceivedBytes(buffer, bytesRead, connectedPlayer);
+        List<Packet> packets = PacketProcessor.ProcessReceivedBytes(receivedBytes, connectedPlayer);
 
         LoginData loginData = null;
         for (Packet packet : packets) {
@@ -223,6 +148,7 @@ public class HandleNewPlayers implements Runnable {
                     return null;
                 }
             }
+
             // Adds the new player to the database
             logger.debug("Successful registration, adding new player {} to the database", loginData.un);
             server.database.RegisterPlayer(loginData.un, loginData.pw);
@@ -275,13 +201,13 @@ public class HandleNewPlayers implements Runnable {
         initialData.index = connectedPlayer.index;
         initialData.maxPlayers = server.maxPlayers;
         initialData.tickRate = server.tickRate;
-        initialData.udpPort = server.udpPort;
 
         // reply back to the player about the authentication success
         logger.debug("Sending positive reply about authentication back to {}...", connectedPlayer.playerName);
         try {
             byte[] bytesToSend = PacketProcessor.MakePacketForSending(1, initialData, connectedPlayer.aesKey);
             server.SendTcp(bytesToSend, tcpClientSocket);
+//            Thread.ofVirtual().start(new SendTcp(server, tcpClientSocket, bytesToSend));
         } catch (Exception e) {
             logger.error(e.toString());
             server.DisconnectPlayer(tcpClientSocket);
@@ -299,6 +225,81 @@ public class HandleNewPlayers implements Runnable {
         return connectedPlayer;
     }
 
+    private byte[] ExchangeSymmetricKey(Socket tcpClientSocket) throws Exception {
+        String clientIpAddress = tcpClientSocket.getInetAddress().toString();
+        // Processing handshake request sent by the connecting player
+        logger.debug("Waiting for {} to send a handshake request...", clientIpAddress);
+
+        byte[] aloReceivedBytes = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
+        aloReceivedBytes = EncryptionAES.Decrypt(aloReceivedBytes, "zTF7QCAw5amV7OxHQKE82rZKwebXrPkp".getBytes());
+
+        if (!Arrays.equals(aloReceivedBytes, "alo".getBytes())) {
+            logger.error("Improper handshake request received from {}, aborting handshake", clientIpAddress);
+            server.DisconnectPlayer(tcpClientSocket);
+            return null;
+        }
+
+        logger.debug("Handshake request received from {}, " +
+                "sending public key to the player...", clientIpAddress);
+        logger.debug("Printing own key of length {}", EncryptionRSA.keypair.getPublic().getEncoded().length);
+
+        // sending public key to player
+        server.SendTcp(EncryptionRSA.keypair.getPublic().getEncoded(), tcpClientSocket);
+//        Thread.ofVirtual().start(new SendTcp(server, tcpClientSocket, EncryptionRSA.keypair.getPublic().getEncoded()));
+
+        // waiting for player to send its own public key
+        logger.debug("Waiting now for {} to send it's own public key...", clientIpAddress);
+
+        byte[] encryptedKeys = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
+
+        // separate
+        logger.trace("Separating encrypted client rsa public key...");
+        byte[] encryptedClientPublicKey = new byte[576];
+        System.arraycopy(encryptedKeys, 0, encryptedClientPublicKey, 0, 576);
+
+        logger.trace("Separating encrypted client aes key...");
+        byte[] encryptedClientAesKey = new byte[512];
+        System.arraycopy(encryptedKeys, 576, encryptedClientAesKey, 0, 512);
+
+        byte[] decryptedAesKey = EncryptionRSA.Decrypt(encryptedClientAesKey);
+        byte[] decryptedClientPublicKey = EncryptionAES.Decrypt(encryptedClientPublicKey, decryptedAesKey);
+
+
+        // decrypting the public key using local private key
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(decryptedClientPublicKey);
+        PublicKey clientPublicKey = KeyFactory.getInstance("RSA").generatePublic(x509EncodedKeySpec);
+
+        // sending a unique AES key to the player encrypted using the player's public key
+        logger.debug("Sending a random AES key to {}", clientIpAddress);
+        byte[] aesKey = EncryptionAES.GenerateRandomKey();
+        byte[] encryptedAesKey = EncryptionRSA.Encrypt(aesKey, clientPublicKey);
+        server.SendTcp(encryptedAesKey, tcpClientSocket);
+//        Thread.ofVirtual().start(new SendTcp(server, tcpClientSocket, encryptedAesKey));
+
+        // testing if it works
+//        logger.debug("Sending test...");
+//        byte[] encryptedBytes = EncryptionAES.Encrypt("test from server", aesKey);
+//        server.SendTcp(encryptedBytes, tcpClientSocket);
+//
+//        logger.trace("Waiting for response...");
+//        byte[] testReceivedBytes = ReceiveTcpPacket.ReceiveBytes(tcpClientSocket);
+//
+//        logger.debug("Decrypting response...");
+//        String decodedMessage = EncryptionAES.DecryptString(testReceivedBytes, aesKey);
+//
+//        logger.debug("Checking if test was successful...");
+//        if (!decodedMessage.equals("test from client")) {
+//            logger.error("Test failed, string doesn't match, aborting handshake");
+//            server.DisconnectPlayer(tcpClientSocket);
+//            return null;
+//        }
+
+        // success
+        logger.debug("RSA handshake was successful with {}", clientIpAddress);
+
+        return aesKey;
+    }
+
     private void SendNegativeResponseAndDisconnect(Socket tcpClientSocket, int resultValue, byte[] aesKey) {
         try {
             logger.debug("Sending negative initial data with value {} to the failed player...", resultValue);
@@ -308,6 +309,7 @@ public class HandleNewPlayers implements Runnable {
 
             byte[] bytesToSend = PacketProcessor.MakePacketForSending(1, initialData, aesKey);
             server.SendTcp(bytesToSend, tcpClientSocket);
+//            Thread.ofVirtual().start(new SendTcp(server, tcpClientSocket, bytesToSend));
 
             logger.debug("Closing connection of the failed player in 1 second...");
             Thread.sleep(1000);

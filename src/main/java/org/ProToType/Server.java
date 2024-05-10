@@ -15,8 +15,6 @@ import org.ProToType.Static.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -27,7 +25,7 @@ public class Server {
     public int maxPlayers;
     public int tickRate;
     public int tcpPort;
-    public int udpPort;
+    //    public int udpPort;
     public ServerSocket tcpServerSocket;
     // public DatagramSocket udpServerSocket;
 
@@ -37,33 +35,16 @@ public class Server {
 
     public final ConcurrentLinkedQueue<Packet> packetsToProcess = new ConcurrentLinkedQueue<Packet>();
 
-    // public static SwingGUI swingGUI;
     public Server() throws Exception {
-        // swingGUI = new SwingGUI();
-        //
-        // JFrame window = new JFrame("alo");
-        // window.setSize(800, 600);
-        // window.setContentPane(swingGUI.rootPanel);
-        // window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // window.setVisible(true);
-
-        // long firstTime = System.nanoTime();
-        // while (true) {
-        // long difference = System.nanoTime() - firstTime;
-        // if (difference >= 100000000) {
-        // System.out.println(difference / 1000000);
-        // break;
-        // }
-        // }
+        EncryptionAES.Initialize();
+        EncryptionRSA.Initialize();
 
         // reads and sets up stuff from config file
         ConfigFile configFile = new ConfigFile();
-        EncryptionAES.InitializeAES();
-        EncryptionRSA.InitializeRSA();
         maxPlayers = configFile.maxPlayers;
         tickRate = configFile.tickRate;
         tcpPort = configFile.tcpPort;
-        udpPort = tcpPort + 1;
+//        udpPort = tcpPort + 1;
 
         // creates array that store information about players and empty slots
         connectedPlayers = new ConnectedPlayer[maxPlayers];
@@ -79,6 +60,7 @@ public class Server {
 //        Thread.ofVirtual().start(new ReceiveUdpPacket(playersManager));
 //        Thread.ofVirtual().start(new RunsEveryTick(this));
 //        Thread.ofVirtual().start(new RunsEverySecond(this));
+
         Thread.ofVirtual().start(new HandleNewPlayers(this));
 
         while (true) {
@@ -86,14 +68,9 @@ public class Server {
         }
     }
 
-    private void CalculatePlayerLatency(ConnectedPlayer connectedPlayer) {
-        Duration duration = Duration.between(connectedPlayer.pingRequestTime, Instant.now());
-        connectedPlayer.latency = duration.getNano();
-    }
-
-    private void SendDataOfConnectedPlayers() {
+    public void SendDataOfConnectedPlayers() {
         // making a list
-        logger.debug("Making list of connected players...");
+        logger.debug("Making list of each player's data for sending to everyone...");
         List<PlayerData> playerDataList = new ArrayList<>();
         for (ConnectedPlayer player : connectedPlayers) {
             if (player == null) continue;
@@ -106,12 +83,11 @@ public class Server {
         }
 
         // sending it to each player
-        logger.debug("Sending it to each player...");
         for (ConnectedPlayer player : connectedPlayers) {
             if (player != null) {
-                logger.debug("Sending it to: {}", player.playerName);
+                logger.debug("Sending list of each player's data to: {}", player.playerName);
                 try {
-                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(2, playerDataList, player.aesKey);
+                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(3, playerDataList, player.aesKey);
                     SendTcp(bytesToSend, player.tcpClientSocket);
                 } catch (Exception e) {
                     logger.error(e.toString());
@@ -195,7 +171,7 @@ public class Server {
             Packet packet = packetsToProcess.poll();
             if (packet != null) {
                 switch (packet.type) {
-                    case 2:
+                    case 4:
                         logger.debug("Received a chat message from {}, message: {}", packet.owner.playerName, packet.json);
                         SendChatMessageToEveryone(packet.owner, packet.json);
                         break;
@@ -214,14 +190,11 @@ public class Server {
             ChatMessage chatMessage = Main.jackson.readValue(chatMessageJson, ChatMessage.class);
             chatMessage.i = msgSender.index;
 
-            // makes package
-
-
             // send the message to each connected player
             logger.trace("Sending chat message from {} to all players...", msgSender.playerName);
             for (ConnectedPlayer player : connectedPlayers) {
                 if (player != null) {
-                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(2, chatMessage, player.aesKey);
+                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(4, chatMessage, player.aesKey);
                     SendTcp(bytesToSend, player.tcpClientSocket);
                 }
             }

@@ -3,9 +3,14 @@ package org.ProToType.Threaded;
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Main;
 import org.ProToType.Server;
+import org.ProToType.Static.EncryptionAES;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RunsEverySecond implements Runnable {
-    private Server server;
+    private static final Logger logger = LogManager.getLogger(RunsEverySecond.class);
+
+    private final Server server;
 
     public RunsEverySecond(Server server) {
         this.server = server;

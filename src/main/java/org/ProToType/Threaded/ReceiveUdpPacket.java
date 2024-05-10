@@ -1,21 +1,21 @@
-package org.ProToType.Threaded;
-
-import org.ProToType.Classes.ConnectedPlayer;
-import org.ProToType.Server;
-import org.ProToType.Static.PacketProcessor;
-
-
-import java.net.DatagramPacket;
-
-public class ReceiveUdpPacket implements Runnable {
-    //    private Server server;
+//package org.ProToType.Threaded;
+//
+//import org.ProToType.Classes.ConnectedPlayer;
+//import org.ProToType.Server;
+//import org.ProToType.Static.PacketProcessor;
+//
+//
+//import java.net.DatagramPacket;
+//
+//public class ReceiveUdpPacket implements Runnable {
+//    private Server server;
 //
 //    public ReceiveUdpPacket(Server server) {
 //        this.server = server;
 //    }
 //
-    @Override
-    public void run() {
+//    @Override
+//    public void run() {
 //        try {
 //            while (true) {
 //                byte[] buffer = new byte[1024];
@@ -38,5 +38,5 @@ public class ReceiveUdpPacket implements Runnable {
 //        } catch (Exception ex) {
 //            System.out.println(ex.getMessage());
 //        }
-    }
-}
+//    }
+//}

@@ -69,33 +69,34 @@ public class ConfigFile {
             final String[] parts = line.split("=");
             if (parts.length == 2) {
                 final String key = parts[0].trim();
+                final String value = parts[1].trim();
                 switch (key) {
                     case tcpPortString:
-                        tcpPort = Integer.parseInt(parts[1].trim());
+                        tcpPort = Integer.parseInt(value);
                         break;
                     case tickRateString:
-                        tickRate = Integer.parseInt(parts[1].trim());
+                        tickRate = Integer.parseInt(value);
                         break;
                     case maxPlayersString:
-                        maxPlayers = Integer.parseInt(parts[1].trim());
+                        maxPlayers = Integer.parseInt(value);
                         break;
 //                    case encryptionKeyString:
 //                        encryptionKey = parts[1].trim();
 //                        break;
                     case databaseTypeString:
-                        databaseType = parts[1].trim();
+                        databaseType = value;
                         break;
                     case remoteDatabaseIpAddressString:
-                        remoteDatabaseIpAddress = parts[1].trim();
+                        remoteDatabaseIpAddress = value;
                         break;
                     case remoteDatabasePortString:
-                        remoteDatabasePort = parts[1].trim();
+                        remoteDatabasePort = value;
                         break;
                     case dbUsernameString:
-                        dbUsername = parts[1].trim();
+                        dbUsername = value;
                         break;
                     case dbPasswordString:
-                        dbPassword = parts[1].trim();
+                        dbPassword = value;
                         break;
                 }
             }

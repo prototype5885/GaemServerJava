@@ -4,24 +4,22 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.ProToType.Classes.ConnectedPlayer;
 import org.ProToType.Classes.Packet;
 import org.ProToType.Main;
+import org.ProToType.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class PacketProcessor {
     private static final Logger logger = LogManager.getLogger(PacketProcessor.class);
 
     public static byte[] MakePacketForSending(int type, Object obj, byte[] aesKey) throws JsonProcessingException {
-//        String messageString = type + "\\p" + Main.jackson.writeValueAsString(obj);
-
         byte[] jsonBytes = AppendPacketType(type, Main.jackson.writeValueAsBytes(obj));
-
         if (EncryptionAES.encryptionEnabled) jsonBytes = EncryptionAES.Encrypt(jsonBytes, aesKey);
-        
         return AppendLengthToBeginning(jsonBytes);
     }
 
@@ -59,11 +57,7 @@ public class PacketProcessor {
         return mergedArray;
     }
 
-    public static List<Packet> ProcessReceivedBytes(byte[] buffer, int byteLength, ConnectedPlayer packetOwner) {
-        // trims the buffer
-        byte[] receivedBytes = new byte[byteLength];
-        System.arraycopy(buffer, 0, receivedBytes, 0, byteLength);
-
+    public static List<Packet> ProcessReceivedBytes(byte[] receivedBytes, ConnectedPlayer packetOwner) {
         // the list that will hold the separated packets
         List<Packet> packets = new ArrayList<>();
 
@@ -105,8 +99,6 @@ public class PacketProcessor {
             // read the rest of the byte array
             byte[] jsonBytes = new byte[packetLength];
             System.arraycopy(packetBytes, 1, jsonBytes, 0, packetLength);
-            logger.trace("Message part in bytes:");
-            ByteProcessor.PrintByteArrayAsHex(packetBytes);
 
             // decode into json string
             packet.json = new String(jsonBytes, StandardCharsets.UTF_8);

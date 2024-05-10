@@ -48,6 +48,7 @@ public class RunsEveryTick implements Runnable {
                     try {
                         byte[] bytesToSend = PacketProcessor.MakePacketForSending(4, playerPositionsWithID, connectedPlayer.aesKey);
                         server.SendTcp(bytesToSend, connectedPlayer.tcpClientSocket);
+//                        Thread.ofVirtual().start(new SendTcp(server, connectedPlayer.tcpClientSocket, bytesToSend));
                     } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                     }

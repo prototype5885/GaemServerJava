@@ -17,8 +17,8 @@ import java.util.List;
 public class ReceiveTcpPacket implements Runnable {
     private static final Logger logger = LogManager.getLogger(ReceiveTcpPacket.class);
 
-    Server server;
-    ConnectedPlayer connectedPlayer;
+    private Server server;
+    private ConnectedPlayer connectedPlayer;
 
     public ReceiveTcpPacket(Server server, ConnectedPlayer connectedPlayer) {
         this.server = server;
@@ -27,12 +27,12 @@ public class ReceiveTcpPacket implements Runnable {
 
     @Override
     public void run() {
-        byte[] buffer = new byte[1024];
-        int bytesRead;
         try {
-            while ((bytesRead = connectedPlayer.tcpClientSocket.getInputStream().read(buffer)) != -1) {
+            while (true) {
+//            while ((bytesRead = connectedPlayer.tcpClientSocket.getInputStream().read(buffer)) != -1) {
+                byte[] receivedBytes = ReceiveBytes(connectedPlayer.tcpClientSocket);
                 logger.trace("Received message from {}", connectedPlayer.playerName);
-                List<Packet> packets = PacketProcessor.ProcessReceivedBytes(buffer, bytesRead, connectedPlayer);
+                List<Packet> packets = PacketProcessor.ProcessReceivedBytes(receivedBytes, connectedPlayer);
                 server.packetsToProcess.addAll(packets);
             }
         } catch (Exception e) {
@@ -43,7 +43,7 @@ public class ReceiveTcpPacket implements Runnable {
     }
 
     public static byte[] ReceiveBytes(Socket tcpClientSocket) throws IOException {
-        byte[] buffer = new byte[2048];
+        byte[] buffer = new byte[4096];
         int bytesRead = tcpClientSocket.getInputStream().read(buffer);
         byte[] receivedBytes = new byte[bytesRead];
         System.arraycopy(buffer, 0, receivedBytes, 0, bytesRead);

@@ -15,12 +15,11 @@ public class EncryptionAES {
     private static final Logger logger = LogManager.getLogger(EncryptionAES.class);
 
     private static final byte keyLength = 16;
-    public static byte[] encryptionKey;
     public static boolean encryptionEnabled = true;
 
     private static Cipher cipher;
 
-    public static void InitializeAES() throws NoSuchPaddingException, NoSuchAlgorithmException {
+    public static void Initialize() throws NoSuchPaddingException, NoSuchAlgorithmException {
         cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
     }
 
@@ -41,7 +40,7 @@ public class EncryptionAES {
             byte[] randomIV = new byte[keyLength];
             new SecureRandom().nextBytes(randomIV);
 
-            // encrypt the string message
+            // encrypt the  message
             SecretKeySpec secretKeySpec = new SecretKeySpec(encryptionKey, "AES");
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, new IvParameterSpec(randomIV));
             byte[] encryptedBytes = cipher.doFinal(messageBytes);

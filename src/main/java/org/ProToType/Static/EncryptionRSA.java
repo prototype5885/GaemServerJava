@@ -9,7 +9,7 @@ public class EncryptionRSA {
     public static KeyPair keypair;
     private static Cipher cipher;
 
-    public static void InitializeRSA() throws Exception {
+    public static void Initialize() throws Exception {
         cipher = Cipher.getInstance("RSA");
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
