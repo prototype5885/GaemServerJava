@@ -1,9 +1,8 @@
 package org.ProToType.Threaded;
 
-import org.ProToType.Classes.ConnectedPlayer;
+import org.ProToType.Classes.Player;
 import org.ProToType.Main;
 import org.ProToType.Server;
-import org.ProToType.Static.EncryptionAES;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,6 +25,7 @@ public class RunsEverySecond implements Runnable {
             startTime = System.currentTimeMillis();
 
 //            UpdatePositionInDatabase();
+//            server.SendDataOfConnectedPlayers();
 
             elapsedTime = System.currentTimeMillis() - startTime;
             sleepTime = 1000 - elapsedTime;
@@ -40,11 +40,11 @@ public class RunsEverySecond implements Runnable {
 
     private void UpdatePositionInDatabase() {
         try {
-            for (ConnectedPlayer connectedPlayer : server.connectedPlayers) {
-                if (connectedPlayer == null)
+            for (Player player : server.players) {
+                if (player == null)
                     continue;
-                String jsonPlayerPosition = Main.jackson.writeValueAsString(connectedPlayer.position);
-                server.database.UpdatePlayerPosition(connectedPlayer.playerName, jsonPlayerPosition);
+                String jsonPlayerPosition = Main.jackson.writeValueAsString(player.position);
+                server.database.UpdatePlayerPosition(player.playerName, jsonPlayerPosition);
             }
 
         } catch (Exception e) {

@@ -1,10 +1,11 @@
 package org.ProToType.Threaded;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.ProToType.Classes.ConnectedPlayer;
+import org.ProToType.Classes.Player;
 import org.ProToType.Classes.Packet;
 import org.ProToType.ClassesShared.InitialData;
 import org.ProToType.ClassesShared.LoginData;
+import org.ProToType.ClassesShared.PlayerData;
 import org.ProToType.Main;
 import org.ProToType.Server;
 import org.ProToType.Static.ByteProcessor;
@@ -52,12 +53,18 @@ public class HandleNewPlayers implements Runnable {
                 }
 
                 // starts the authentication that will return player instance on success
-                ConnectedPlayer connectedPlayer = StartAuthentication(tcpClientSocket, aesKey);
+                Player player = StartAuthentication(tcpClientSocket, aesKey);
 
-                if (connectedPlayer != null) {
-                    logger.info("Authentication of {} ({}) was success", tcpClientSocket.getInetAddress(), connectedPlayer.playerName);
-                    server.SendDataOfConnectedPlayers();
-                    Thread.ofVirtual().start(new ReceiveTcpPacket(server, connectedPlayer));
+                if (player != null) {
+                    logger.debug("Sending every player's data to the new player {}...", player.playerName);
+                    PlayerData[] playerDataArray = server.GetDataOfEveryPlayers();
+                    server.SendToOnePlayer(21, playerDataArray, player);
+
+                    logger.debug("Sending data of player {} to everyone except the new player...", player.playerName);
+                    PlayerData playerData = server.GetDataOfPlayer(player);
+                    server.SendToEveryoneExcept(20, playerData, player);
+
+                    Thread.ofVirtual().start(new ReceiveTcpPacket(server, player));
 //                    new Thread(new ReceiveTcpPacket(this, connectedPlayer)).start();
                 } else {
                     logger.info("Authentication of {} was failure", tcpClientSocket.getInetAddress());
@@ -71,11 +78,11 @@ public class HandleNewPlayers implements Runnable {
         }
     }
 
-    private ConnectedPlayer StartAuthentication(Socket tcpClientSocket, byte[] aesKey) throws SQLException, IOException {
+    private Player StartAuthentication(Socket tcpClientSocket, byte[] aesKey) throws SQLException, IOException {
         String clientIpAddress = tcpClientSocket.getInetAddress().toString();
         logger.debug("Started authentication for {}...", clientIpAddress);
 
-        ConnectedPlayer connectedPlayer = new ConnectedPlayer();
+        Player connectedPlayer = new Player();
 
         connectedPlayer.tcpClientSocket = tcpClientSocket;
         connectedPlayer.aesKey = aesKey;
@@ -85,8 +92,8 @@ public class HandleNewPlayers implements Runnable {
         // find which player slot is free
         logger.debug("Searching a free slot for {}...", clientIpAddress);
         connectedPlayer.index = -1;
-        for (int i = 0; i < server.connectedPlayers.length; i++) {
-            if (server.connectedPlayers[i] == null) {
+        for (int i = 0; i < server.players.length; i++) {
+            if (server.players[i] == null) {
                 connectedPlayer.index = i;
                 logger.debug("Found free slot at slot {}", connectedPlayer.index);
                 break;
@@ -159,7 +166,7 @@ public class HandleNewPlayers implements Runnable {
 
         // searches if player is already connected to the server
         logger.debug("Checking if player {} is connected already...", loginData.un);
-        for (ConnectedPlayer player : server.connectedPlayers) {
+        for (Player player : server.players) {
             if (player == null)
                 continue;
             if (loginData.un.equals(player.playerName)) {
@@ -219,9 +226,11 @@ public class HandleNewPlayers implements Runnable {
 
         // adds the new player to the list of connected players
         logger.debug("Adding player {} to the list of connected players...", connectedPlayer.playerName);
-        server.connectedPlayers[connectedPlayer.index] = connectedPlayer;
+        server.players[connectedPlayer.index] = connectedPlayer;
 
         // returns success
+        logger.info("Authentication of {} ({}) was success", tcpClientSocket.getInetAddress(), connectedPlayer.playerName);
+        connectedPlayer.status = 1;
         return connectedPlayer;
     }
 

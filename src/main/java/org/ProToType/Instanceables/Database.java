@@ -3,7 +3,7 @@ package org.ProToType.Instanceables;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.ProToType.Classes.ConnectedPlayer;
+import org.ProToType.Classes.Player;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -200,14 +200,14 @@ public class Database {
         preparedStatement.executeUpdate();
     }
 
-    public void UpdateLastLoginIpAddress(ConnectedPlayer connectedPlayer) throws SQLException {
-        logger.debug("Updating last login ip address of player {} to {}...", connectedPlayer.playerName, connectedPlayer.ipAddress.getHostAddress());
+    public void UpdateLastLoginIpAddress(Player player) throws SQLException {
+        logger.debug("Updating last login ip address of player {} to {}...", player.playerName, player.ipAddress.getHostAddress());
         String query = "UPDATE Players SET LastLoginIp = ? WHERE PlayerName = ?";
 
         PreparedStatement preparedStatement = dbConnection.prepareStatement(query);
-        preparedStatement.setObject(1, connectedPlayer.ipAddress.getHostAddress());
-        preparedStatement.setString(2, connectedPlayer.playerName);
+        preparedStatement.setObject(1, player.ipAddress.getHostAddress());
+        preparedStatement.setString(2, player.playerName);
         preparedStatement.executeUpdate();
-        logger.debug("Last login ip address of player {} was updated successfully", connectedPlayer.playerName);
+        logger.debug("Last login ip address of player {} was updated successfully", player.playerName);
     }
 }

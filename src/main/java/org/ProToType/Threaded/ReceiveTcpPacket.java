@@ -5,7 +5,7 @@ import org.ProToType.Static.PacketProcessor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.ProToType.Classes.ConnectedPlayer;
+import org.ProToType.Classes.Player;
 
 import org.ProToType.Server;
 
@@ -18,11 +18,11 @@ public class ReceiveTcpPacket implements Runnable {
     private static final Logger logger = LogManager.getLogger(ReceiveTcpPacket.class);
 
     private Server server;
-    private ConnectedPlayer connectedPlayer;
+    private Player player;
 
-    public ReceiveTcpPacket(Server server, ConnectedPlayer connectedPlayer) {
+    public ReceiveTcpPacket(Server server, Player player) {
         this.server = server;
-        this.connectedPlayer = connectedPlayer;
+        this.player = player;
     }
 
     @Override
@@ -30,15 +30,15 @@ public class ReceiveTcpPacket implements Runnable {
         try {
             while (true) {
 //            while ((bytesRead = connectedPlayer.tcpClientSocket.getInputStream().read(buffer)) != -1) {
-                byte[] receivedBytes = ReceiveBytes(connectedPlayer.tcpClientSocket);
-                logger.trace("Received message from {}", connectedPlayer.playerName);
-                List<Packet> packets = PacketProcessor.ProcessReceivedBytes(receivedBytes, connectedPlayer);
+                byte[] receivedBytes = ReceiveBytes(player.tcpClientSocket);
+                logger.trace("Received message from {}", player.playerName);
+                List<Packet> packets = PacketProcessor.ProcessReceivedBytes(receivedBytes, player);
                 server.packetsToProcess.addAll(packets);
             }
         } catch (Exception e) {
             logger.debug("Error receiving Tcp packet: {}", e.toString());
         } finally {
-            server.DisconnectPlayer(connectedPlayer.tcpClientSocket);
+            server.DisconnectPlayer(player.tcpClientSocket);
         }
     }
 

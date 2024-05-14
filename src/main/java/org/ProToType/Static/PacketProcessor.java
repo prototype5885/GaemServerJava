@@ -1,17 +1,15 @@
 package org.ProToType.Static;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.ProToType.Classes.ConnectedPlayer;
+import org.ProToType.Classes.Player;
 import org.ProToType.Classes.Packet;
 import org.ProToType.Main;
-import org.ProToType.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class PacketProcessor {
@@ -57,7 +55,7 @@ public class PacketProcessor {
         return mergedArray;
     }
 
-    public static List<Packet> ProcessReceivedBytes(byte[] receivedBytes, ConnectedPlayer packetOwner) {
+    public static List<Packet> ProcessReceivedBytes(byte[] receivedBytes, Player packetOwner) {
         // the list that will hold the separated packets
         List<Packet> packets = new ArrayList<>();
 

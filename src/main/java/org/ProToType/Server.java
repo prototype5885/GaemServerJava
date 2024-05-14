@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.ProToType.Classes.ConnectedPlayer;
+import org.ProToType.Classes.Player;
 import org.ProToType.Instanceables.ConfigFile;
 import org.ProToType.Instanceables.Database;
 import org.ProToType.Static.*;
@@ -15,8 +15,6 @@ import org.ProToType.Static.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Server {
@@ -29,7 +27,7 @@ public class Server {
     public ServerSocket tcpServerSocket;
     // public DatagramSocket udpServerSocket;
 
-    public ConnectedPlayer[] connectedPlayers;
+    public Player[] players;
 
     public Database database;
 
@@ -47,7 +45,7 @@ public class Server {
 //        udpPort = tcpPort + 1;
 
         // creates array that store information about players and empty slots
-        connectedPlayers = new ConnectedPlayer[maxPlayers];
+        players = new Player[maxPlayers];
 
         // starts tcp and udp servers
         tcpServerSocket = new ServerSocket(tcpPort);
@@ -68,77 +66,120 @@ public class Server {
         }
     }
 
-    public void SendDataOfConnectedPlayers() {
-        // making a list
-        logger.debug("Making list of each player's data for sending to everyone...");
-        List<PlayerData> playerDataList = new ArrayList<>();
-        for (ConnectedPlayer player : connectedPlayers) {
-            if (player == null) continue;
+    public PlayerData GetDataOfPlayer(Player player) {
+        // status means if player is connecting or disconnecting
+        PlayerData playerData = new PlayerData();
+        playerData.i = player.index;
+        playerData.s = player.status;
+        playerData.un = player.playerName;
 
-            PlayerData playerData = new PlayerData();
-            playerData.i = player.index;
-            playerData.un = player.playerName;
-
-            playerDataList.add(playerData);
-        }
-
-        // sending it to each player
-        for (ConnectedPlayer player : connectedPlayers) {
-            if (player != null) {
-                logger.debug("Sending list of each player's data to: {}", player.playerName);
-                try {
-                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(3, playerDataList, player.aesKey);
-                    SendTcp(bytesToSend, player.tcpClientSocket);
-                } catch (Exception e) {
-                    logger.error(e.toString());
-                }
-            }
-        }
+        return playerData;
     }
 
-    private void UpdatePlayerPosition(ConnectedPlayer connectedPlayer, String playerPosString) {
+    public PlayerData[] GetDataOfEveryPlayers() {
+        PlayerData[] playerDataArray = new PlayerData[maxPlayers];
+        for (int i = 0; i < maxPlayers; i++) {
+            if (players[i] == null) continue;
+
+            PlayerData playerData = new PlayerData();
+            playerData.i = players[i].index;
+            playerData.s = players[i].status;
+            playerData.un = players[i].playerName;
+
+            playerDataArray[i] = playerData;
+        }
+        return playerDataArray;
+//        if (player != null) {
+//            logger.debug("Sending data of everyone for {}...", player.playerName);
+//            SendToOnePlayer(21, playerDataArray, player);
+//        } else if (playerToSkip != null) { // sends to every player except the given exception player
+//
+//        } else { // sends to every player if player was not given in parameters
+//            logger.debug("Sending data of everyone for everyone...");
+//            SendToEveryone(21, playerDataArray);
+//        }
+    }
+
+    private void UpdatePlayerPosition(Player player, String playerPosString) {
         try {
-            connectedPlayer.position = Main.jackson.readValue(playerPosString, PlayerPosition.class);
+            player.position = Main.jackson.readValue(playerPosString, PlayerPosition.class);
         } catch (JsonProcessingException e) {
             logger.debug(e.toString());
         }
     }
 
     public void DisconnectPlayer(Socket tcpClientSocket) {
+        int index = -1;
+
         logger.info("Disconnecting {}...", tcpClientSocket.getInetAddress());
         try {
             tcpClientSocket.shutdownOutput();
             tcpClientSocket.shutdownInput();
             tcpClientSocket.close();
-            logger.debug("Closed socket for {}", tcpClientSocket.getInetAddress());
+//            logger.debug("Closed socket for {}", tcpClientSocket.getInetAddress());
         } catch (IOException e) {
             logger.error("Error closing socket for {}: {}", tcpClientSocket.getInetAddress(), e.toString());
         }
 
-        logger.debug("Searching for {} in the player list to remove using tcp socket...",
-                tcpClientSocket.getInetAddress());
+        logger.debug("Searching for {} in the player array to remove...", tcpClientSocket.getInetAddress());
         for (int i = 0; i < maxPlayers; i++) {
-            if (connectedPlayers[i] != null && connectedPlayers[i].tcpClientSocket.equals(tcpClientSocket)) {
-                ConnectedPlayer playerToDisconnect = connectedPlayers[i];
-                logger.debug("Found {} in the player list, removing...", playerToDisconnect.playerName);
-                connectedPlayers[i] = null;
-                logger.debug("Removed player from the player list, slot status: {}", connectedPlayers[i]);
-                return;
+            if (players[i] != null && players[i].tcpClientSocket.equals(tcpClientSocket)) {
+                index = i;
+                logger.debug("Found {} in the player array, removing...", players[i].playerName);
+                players[i] = null;
+//                logger.debug("Removed player from the player array, slot status: {}", players[i]);
             }
         }
-        logger.debug("Player not present in the player list was disconnected successfully");
+
+        logger.debug("Sending the disconnection info to each player...");
+        PlayerData playerData = new PlayerData();
+        playerData.i = index;
+        playerData.s = 0;
+
+        SendToEveryone(20, playerData);
     }
 
     private int GetConnectedPlayersCount() {
         int playerCount = 0;
-        for (ConnectedPlayer connectedPlayer : connectedPlayers) {
-            if (connectedPlayer != null) {
+        for (Player player : players) {
+            if (player != null) {
                 playerCount++;
             }
         }
         return playerCount;
     }
 
+    public void SendToOnePlayer(int type, Object obj, Player player) {
+        try {
+            logger.debug("Sending message type {} to: {}", type, player.playerName);
+            byte[] bytesToSend = PacketProcessor.MakePacketForSending(type, obj, player.aesKey);
+            SendTcp(bytesToSend, player.tcpClientSocket);
+        } catch (Exception e) {
+            logger.error(e.toString());
+        }
+    }
+
+    public void SendToEveryoneExcept(int type, Object obj, Player playerToSkip) {
+        for (Player player : players) {
+            if (player == null || player == playerToSkip) continue;
+            try {
+                SendToOnePlayer(type, obj, player);
+            } catch (Exception e) {
+                logger.error(e.toString());
+            }
+        }
+    }
+
+    public void SendToEveryone(int type, Object obj) {
+        for (Player player : players) {
+            if (player == null) continue;
+            try {
+                SendToOnePlayer(type, obj, player);
+            } catch (Exception e) {
+                logger.error(e.toString());
+            }
+        }
+    }
 
     public void SendTcp(byte[] bytesToSend, Socket tcpClientSocket) {
         try {
@@ -171,7 +212,7 @@ public class Server {
             Packet packet = packetsToProcess.poll();
             if (packet != null) {
                 switch (packet.type) {
-                    case 4:
+                    case 30:
                         logger.debug("Received a chat message from {}, message: {}", packet.owner.playerName, packet.json);
                         SendChatMessageToEveryone(packet.owner, packet.json);
                         break;
@@ -183,21 +224,14 @@ public class Server {
         }
     }
 
-    public void SendChatMessageToEveryone(ConnectedPlayer msgSender, String chatMessageJson) {
+    public void SendChatMessageToEveryone(Player msgSender, String chatMessageJson) {
         try {
-            logger.trace("Making ChatMessage object and then packet for the message {} sent", msgSender.playerName);
-            // prepares object
+            logger.trace("Making ChatMessage object and then packet for the message that player {} sent", msgSender.playerName);
             ChatMessage chatMessage = Main.jackson.readValue(chatMessageJson, ChatMessage.class);
             chatMessage.i = msgSender.index;
 
-            // send the message to each connected player
-            logger.trace("Sending chat message from {} to all players...", msgSender.playerName);
-            for (ConnectedPlayer player : connectedPlayers) {
-                if (player != null) {
-                    byte[] bytesToSend = PacketProcessor.MakePacketForSending(4, chatMessage, player.aesKey);
-                    SendTcp(bytesToSend, player.tcpClientSocket);
-                }
-            }
+            // send the message to every connected players
+            SendToEveryone(30, chatMessage);
         } catch (JsonProcessingException e) {
             logger.error(e.toString());
         }
