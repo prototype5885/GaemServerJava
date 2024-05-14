@@ -53,18 +53,13 @@ public class HandleNewPlayers implements Runnable {
                 }
 
                 // starts the authentication that will return player instance on success
-                Player player = StartAuthentication(tcpClientSocket, aesKey);
+                Player newPlayer = StartAuthentication(tcpClientSocket, aesKey);
 
-                if (player != null) {
-                    logger.debug("Sending every player's data to the new player {}...", player.playerName);
-                    PlayerData[] playerDataArray = server.GetDataOfEveryPlayers();
-                    server.SendToOnePlayer(21, playerDataArray, player);
+                if (newPlayer != null) {
+                    logger.debug("Adding player {} to the array of connected players...", newPlayer.playerName);
+                    server.AddPlayer(newPlayer);
 
-                    logger.debug("Sending data of player {} to everyone except the new player...", player.playerName);
-                    PlayerData playerData = server.GetDataOfPlayer(player);
-                    server.SendToEveryoneExcept(20, playerData, player);
-
-                    Thread.ofVirtual().start(new ReceiveTcpPacket(server, player));
+                    Thread.ofVirtual().start(new ReceiveTcpPacket(server, newPlayer));
 //                    new Thread(new ReceiveTcpPacket(this, connectedPlayer)).start();
                 } else {
                     logger.info("Authentication of {} was failure", tcpClientSocket.getInetAddress());
@@ -82,27 +77,27 @@ public class HandleNewPlayers implements Runnable {
         String clientIpAddress = tcpClientSocket.getInetAddress().toString();
         logger.debug("Started authentication for {}...", clientIpAddress);
 
-        Player connectedPlayer = new Player();
+        Player newPlayer = new Player();
 
-        connectedPlayer.tcpClientSocket = tcpClientSocket;
-        connectedPlayer.aesKey = aesKey;
-        connectedPlayer.ipAddress = tcpClientSocket.getInetAddress();
+        newPlayer.tcpClientSocket = tcpClientSocket;
+        newPlayer.aesKey = aesKey;
+        newPlayer.ipAddress = tcpClientSocket.getInetAddress();
 
 
         // find which player slot is free
         logger.debug("Searching a free slot for {}...", clientIpAddress);
-        connectedPlayer.index = -1;
+        newPlayer.index = -1;
         for (int i = 0; i < server.players.length; i++) {
             if (server.players[i] == null) {
-                connectedPlayer.index = i;
-                logger.debug("Found free slot at slot {}", connectedPlayer.index);
+                newPlayer.index = i;
+                logger.debug("Found free slot at slot {}", newPlayer.index);
                 break;
             }
         }
         // runs if server is full
-        if (connectedPlayer.index == -1) {
+        if (newPlayer.index == -1) {
             logger.debug("Server is full, rejecting {}", clientIpAddress);
-            SendNegativeResponseAndDisconnect(connectedPlayer.tcpClientSocket, 7, connectedPlayer.aesKey);
+            SendNegativeResponseAndDisconnect(newPlayer.tcpClientSocket, 7, newPlayer.aesKey);
             return null;
         }
 
@@ -112,7 +107,7 @@ public class HandleNewPlayers implements Runnable {
 
         // read and process the LoginData sent by the player
         logger.debug("Processing received LoginData from {}...", clientIpAddress);
-        List<Packet> packets = PacketProcessor.ProcessReceivedBytes(receivedBytes, connectedPlayer);
+        List<Packet> packets = PacketProcessor.ProcessReceivedBytes(receivedBytes, newPlayer);
 
         LoginData loginData = null;
         for (Packet packet : packets) {
@@ -143,7 +138,7 @@ public class HandleNewPlayers implements Runnable {
             logger.debug("Checking chosen name's length for player {}...", loginData.un);
             if (loginData.un.length() < 2 || loginData.un.length() > 16) {
                 logger.debug("Player has {} chosen too long or too short name, registration failed", loginData.un);
-                SendNegativeResponseAndDisconnect(tcpClientSocket, 5, connectedPlayer.aesKey);
+                SendNegativeResponseAndDisconnect(tcpClientSocket, 5, newPlayer.aesKey);
                 return null;
             }
             // Checks if the chosen name is already registered
@@ -151,7 +146,7 @@ public class HandleNewPlayers implements Runnable {
             try (ResultSet resultSet = server.database.SearchForPlayerInDatabase(loginData.un)) {
                 if (resultSet != null) {
                     logger.debug("Player name {} already exists in the database, registration failed", loginData.un);
-                    SendNegativeResponseAndDisconnect(tcpClientSocket, 6, connectedPlayer.aesKey);
+                    SendNegativeResponseAndDisconnect(tcpClientSocket, 6, newPlayer.aesKey);
                     return null;
                 }
             }
@@ -171,7 +166,7 @@ public class HandleNewPlayers implements Runnable {
                 continue;
             if (loginData.un.equals(player.playerName)) {
                 logger.debug("Player {} is already connected, login failed", loginData.un);
-                SendNegativeResponseAndDisconnect(tcpClientSocket, 4, connectedPlayer.aesKey);
+                SendNegativeResponseAndDisconnect(tcpClientSocket, 4, newPlayer.aesKey);
                 return null;
             }
         }
@@ -182,7 +177,7 @@ public class HandleNewPlayers implements Runnable {
             // if player was not found in database
             if (resultSet == null) {
                 logger.debug("Player {} not found in database, login failed.", loginData.un);
-                SendNegativeResponseAndDisconnect(tcpClientSocket, 3, connectedPlayer.aesKey);
+                SendNegativeResponseAndDisconnect(tcpClientSocket, 3, newPlayer.aesKey);
                 return null;
             }
 
@@ -191,28 +186,28 @@ public class HandleNewPlayers implements Runnable {
             String storedHashedPassword = resultSet.getString("Password");
             if (!loginData.pw.equals(storedHashedPassword)) {
                 logger.debug("Player {} has entered wrong password, login failed", loginData.un);
-                SendNegativeResponseAndDisconnect(tcpClientSocket, 2, connectedPlayer.aesKey);
+                SendNegativeResponseAndDisconnect(tcpClientSocket, 2, newPlayer.aesKey);
                 return null;
             }
 
             // login was a success
             logger.debug("Successful login for player {}", loginData.un);
-            connectedPlayer.databaseID = resultSet.getInt("id");
-            connectedPlayer.playerName = resultSet.getString("PlayerName");
+            newPlayer.databaseID = resultSet.getInt("id");
+            newPlayer.playerName = resultSet.getString("PlayerName");
         }
 
         // creating InitialData object
         logger.debug("Creating InitialData object to be sent to {}", loginData.un);
         InitialData initialData = new InitialData();
         initialData.loginResultValue = 1;
-        initialData.index = connectedPlayer.index;
+        initialData.index = newPlayer.index;
         initialData.maxPlayers = server.maxPlayers;
         initialData.tickRate = server.tickRate;
 
         // reply back to the player about the authentication success
-        logger.debug("Sending positive reply about authentication back to {}...", connectedPlayer.playerName);
+        logger.debug("Sending positive reply about authentication back to {}...", newPlayer.playerName);
         try {
-            byte[] bytesToSend = PacketProcessor.MakePacketForSending(1, initialData, connectedPlayer.aesKey);
+            byte[] bytesToSend = PacketProcessor.MakePacketForSending(1, initialData, newPlayer.aesKey);
             server.SendTcp(bytesToSend, tcpClientSocket);
 //            Thread.ofVirtual().start(new SendTcp(server, tcpClientSocket, bytesToSend));
         } catch (Exception e) {
@@ -222,16 +217,12 @@ public class HandleNewPlayers implements Runnable {
         }
 
         // sets last login ip address
-        server.database.UpdateLastLoginIpAddress(connectedPlayer);
-
-        // adds the new player to the list of connected players
-        logger.debug("Adding player {} to the list of connected players...", connectedPlayer.playerName);
-        server.players[connectedPlayer.index] = connectedPlayer;
+        server.database.UpdateLastLoginIpAddress(newPlayer);
 
         // returns success
-        logger.info("Authentication of {} ({}) was success", tcpClientSocket.getInetAddress(), connectedPlayer.playerName);
-        connectedPlayer.status = 1;
-        return connectedPlayer;
+        logger.info("Authentication of {} ({}) was success", tcpClientSocket.getInetAddress(), newPlayer.playerName);
+        newPlayer.status = 1;
+        return newPlayer;
     }
 
     private byte[] ExchangeSymmetricKey(Socket tcpClientSocket) throws Exception {

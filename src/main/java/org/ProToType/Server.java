@@ -20,18 +20,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class Server {
     private static final Logger logger = LogManager.getLogger(Server.class);
 
-    public int maxPlayers;
-    public int tickRate;
-    public int tcpPort;
-    //    public int udpPort;
-    public ServerSocket tcpServerSocket;
-    // public DatagramSocket udpServerSocket;
+    public final int maxPlayers;
+    public final int tickRate;
+    private final int tcpPort;
+    //    public final int udpPort;
+    public final ServerSocket tcpServerSocket;
+    // public final DatagramSocket udpServerSocket;
 
-    public Player[] players;
+    public final Player[] players;
+    private int playerCount = 0;
 
-    public Database database;
+    public final Database database;
 
     public final ConcurrentLinkedQueue<Packet> packetsToProcess = new ConcurrentLinkedQueue<Packet>();
+
+    private final Object lock = new Object();
 
     public Server() throws Exception {
         EncryptionAES.Initialize();
@@ -61,8 +64,37 @@ public class Server {
 
         Thread.ofVirtual().start(new HandleNewPlayers(this));
 
+        // server loop
+        long startTime;
+        long endTime;
+        long elapsedTime;
+        long sleepTime;
         while (true) {
+            if (playerCount == 0) {
+                synchronized (lock) {
+                    logger.info("No player present on server, pausing main loop...");
+                    lock.wait();
+                    logger.info("A player is present, continuing main loop...");
+                }
+            }
+
+            // starts the loop
+            startTime = System.currentTimeMillis();
+
             ProcessPacketsSentByPlayers();
+
+            // ends the loop
+            endTime = System.currentTimeMillis();
+            elapsedTime = endTime - startTime;
+            sleepTime = 99 - elapsedTime;
+
+
+            if (sleepTime < 0) {
+                logger.trace("Skipped sleep time, sleepTime: {}", sleepTime);
+                continue;
+            }
+            Thread.sleep(sleepTime);
+            logger.trace("Tick finished calculations in: {} ms, then slept for: {} ms", elapsedTime, System.currentTimeMillis() - endTime);
         }
     }
 
@@ -89,15 +121,6 @@ public class Server {
             playerDataArray[i] = playerData;
         }
         return playerDataArray;
-//        if (player != null) {
-//            logger.debug("Sending data of everyone for {}...", player.playerName);
-//            SendToOnePlayer(21, playerDataArray, player);
-//        } else if (playerToSkip != null) { // sends to every player except the given exception player
-//
-//        } else { // sends to every player if player was not given in parameters
-//            logger.debug("Sending data of everyone for everyone...");
-//            SendToEveryone(21, playerDataArray);
-//        }
     }
 
     private void UpdatePlayerPosition(Player player, String playerPosString) {
@@ -109,8 +132,6 @@ public class Server {
     }
 
     public void DisconnectPlayer(Socket tcpClientSocket) {
-        int index = -1;
-
         logger.info("Disconnecting {}...", tcpClientSocket.getInetAddress());
         try {
             tcpClientSocket.shutdownOutput();
@@ -124,13 +145,19 @@ public class Server {
         logger.debug("Searching for {} in the player array to remove...", tcpClientSocket.getInetAddress());
         for (int i = 0; i < maxPlayers; i++) {
             if (players[i] != null && players[i].tcpClientSocket.equals(tcpClientSocket)) {
-                index = i;
                 logger.debug("Found {} in the player array, removing...", players[i].playerName);
-                players[i] = null;
-//                logger.debug("Removed player from the player array, slot status: {}", players[i]);
+                DeletePlayer(i);
             }
         }
+    }
 
+    public void DeletePlayer(int index) {
+        // removing and calculating connected players
+        players[index] = null;
+        CalculateConnectedPlayersCount();
+        logger.info("Removed player, number of players on server: {}", playerCount);
+
+        // sending to other players
         logger.debug("Sending the disconnection info to each player...");
         PlayerData playerData = new PlayerData();
         playerData.i = index;
@@ -139,14 +166,45 @@ public class Server {
         SendToEveryone(20, playerData);
     }
 
-    private int GetConnectedPlayersCount() {
-        int playerCount = 0;
+    public void AddPlayer(Player newPlayer) {
+        // adding and calculating connected players
+        players[newPlayer.index] = newPlayer;
+        CalculateConnectedPlayersCount();
+        logger.info("Added player, number of players on server : {}", playerCount);
+
+        // sending to other players
+        logger.debug("Sending data of player {} to everyone except the new player...", newPlayer.playerName);
+        PlayerData playerData = GetDataOfPlayer(newPlayer);
+        SendToEveryoneExcept(20, playerData, newPlayer);
+
+        logger.debug("Sending every player's data to the new player {}...", newPlayer.playerName);
+        PlayerData[] playerDataArray = GetDataOfEveryPlayers();
+        SendToOnePlayer(21, playerDataArray, newPlayer);
+    }
+
+    private void CalculateConnectedPlayersCount() {
+        // calculated player count
+        int count = 0;
         for (Player player : players) {
             if (player != null) {
-                playerCount++;
+                count++;
             }
         }
-        return playerCount;
+        playerCount = count;
+
+        // prints current player count
+        if (playerCount > 1) {
+            logger.info("There are currently {} players on the server", playerCount);
+        } else {
+            logger.info("There is currently {} player on the server", playerCount);
+        }
+
+        // resumes main loop if there is at least a player present
+        if (playerCount > 0) {
+            synchronized (lock) {
+                lock.notify();
+            }
+        }
     }
 
     public void SendToOnePlayer(int type, Object obj, Player player) {
@@ -208,8 +266,9 @@ public class Server {
 //    }
 
     public void ProcessPacketsSentByPlayers() {
-        while (!packetsToProcess.isEmpty()) {
-            Packet packet = packetsToProcess.poll();
+        Packet packet;
+        while ((packet = packetsToProcess.poll()) != null) {
+//            Packet packet = packetsToProcess.poll();
             if (packet != null) {
                 switch (packet.type) {
                     case 30:
