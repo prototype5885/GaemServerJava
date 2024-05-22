@@ -7,6 +7,8 @@ import org.ProToType.Main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,5 +114,14 @@ public class PacketProcessor {
             logger.debug("Multiple packets were received as one, packets: {}", foundPackets);
         }
         return packets;
+    }
+
+    public static byte[] ReceiveBytes(Socket tcpClientSocket) throws IOException {
+        byte[] buffer = new byte[4096];
+        int bytesRead = tcpClientSocket.getInputStream().read(buffer);
+        byte[] receivedBytes = new byte[bytesRead];
+        System.arraycopy(buffer, 0, receivedBytes, 0, bytesRead);
+
+        return receivedBytes;
     }
 }

@@ -1,5 +1,6 @@
-package org.ProToType.Instanceables;
+package org.ProToType.Static;
 
+import org.ProToType.Instanceables.ConfigFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,9 +17,9 @@ import java.sql.SQLException;
 public class Database {
     private static final Logger logger = LogManager.getLogger(Database.class);
 
-    public Connection dbConnection;
+    public static Connection dbConnection;
 
-    public void ConnectToDatabase(ConfigFile configFile) throws Exception {
+    public static void ConnectToDatabase(ConfigFile configFile) throws Exception {
         String dbType;
         String dbName;
         String dbUrl;
@@ -127,7 +128,7 @@ public class Database {
         }
     }
 
-    private String InitialQuery(String dbType) {
+    private static String InitialQuery(String dbType) {
         logger.debug("Initial query to database, database type: {}", dbType);
 
         String autoIncrement = "AUTOINCREMENT";
@@ -146,7 +147,7 @@ public class Database {
                 "LastPosition TEXT)";
     }
 
-    public void RegisterPlayer(String playerName, String hashedPassword) throws SQLException {
+    public static void RegisterPlayer(String playerName, String hashedPassword) throws SQLException {
         logger.debug("Adding player {} into the database...", playerName);
         String query = "INSERT INTO Players (PlayerName, Password, Wage, Money) VALUES (?, ?, ?, ?)";
 
@@ -162,7 +163,7 @@ public class Database {
         logger.info("Player {} has been added to the database", playerName);
     }
 
-    public ResultSet SearchForPlayerInDatabase(String playerName) throws SQLException {
+    public static ResultSet SearchForPlayerInDatabase(String playerName) throws SQLException {
         logger.debug("Searching for player {} in the database...", playerName);
         String query = "SELECT * FROM Players WHERE PlayerName = ?";
 
@@ -179,7 +180,7 @@ public class Database {
         return null;
     }
 
-    public List<String> ListAllRegisteredPlayers() throws SQLException {
+    public static List<String> ListAllRegisteredPlayers() throws SQLException {
         String query = "SELECT PlayerName FROM Players";
 
         PreparedStatement preparedStatement = dbConnection.prepareStatement(query);
@@ -191,7 +192,7 @@ public class Database {
         return playerNameList;
     }
 
-    public void UpdatePlayerPosition(String playerName, String jsonPlayerPosition) throws SQLException {
+    public static void UpdatePlayerPosition(String playerName, String jsonPlayerPosition) throws SQLException {
         String query = "UPDATE Players SET LastPosition = ? WHERE PlayerName = ?";
 
         PreparedStatement preparedStatement = dbConnection.prepareStatement(query);
@@ -200,7 +201,7 @@ public class Database {
         preparedStatement.executeUpdate();
     }
 
-    public void UpdateLastLoginIpAddress(Player player) throws SQLException {
+    public static void UpdateLastLoginIpAddress(Player player) throws SQLException {
         logger.debug("Updating last login ip address of player {} to {}...", player.playerName, player.ipAddress.getHostAddress());
         String query = "UPDATE Players SET LastLoginIp = ? WHERE PlayerName = ?";
 

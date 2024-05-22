@@ -1,27 +1,20 @@
 package org.ProToType.Classes;
 
 import org.ProToType.ClassesShared.PlayerPosition;
+import org.ProToType.Threaded.PlayerThread;
 
 import java.net.InetAddress;
 import java.net.Socket;
 
 public class Player {
-    public int index;
     public int databaseID = -1;
     public int status;
     public String playerName;
     public Socket tcpClientSocket;
+    public PlayerThread playerThread;
     public InetAddress ipAddress;
     public byte[] aesKey;
     public PlayerPosition position = new PlayerPosition();
-
-    public int getIndex() {
-        return index;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
-    }
 
     public int getDatabaseID() {
         return databaseID;
@@ -69,5 +62,21 @@ public class Player {
 
     public void setPosition(PlayerPosition position) {
         this.position = position;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public PlayerThread getPlayerThread() {
+        return playerThread;
+    }
+
+    public void setPlayerThread(PlayerThread playerThread) {
+        this.playerThread = playerThread;
     }
 }

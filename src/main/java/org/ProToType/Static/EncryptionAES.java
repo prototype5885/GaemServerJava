@@ -19,8 +19,13 @@ public class EncryptionAES {
 
     private static Cipher cipher;
 
+    static {
+
+    }
+
     public static void Initialize() throws NoSuchPaddingException, NoSuchAlgorithmException {
         cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+//        byte[] test = Encrypt("a".getBytes(), GenerateRandomKey());
     }
 
     public static byte[] GenerateRandomKey() {

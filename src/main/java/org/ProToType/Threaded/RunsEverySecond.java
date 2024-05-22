@@ -2,19 +2,12 @@ package org.ProToType.Threaded;
 
 import org.ProToType.Classes.Player;
 import org.ProToType.Main;
-import org.ProToType.Server;
+import org.ProToType.Static.Database;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class RunsEverySecond implements Runnable {
     private static final Logger logger = LogManager.getLogger(RunsEverySecond.class);
-
-    private final Server server;
-
-    public RunsEverySecond(Server server) {
-        this.server = server;
-    }
-
 
     @Override
     public void run() {
@@ -40,11 +33,11 @@ public class RunsEverySecond implements Runnable {
 
     private void UpdatePositionInDatabase() {
         try {
-            for (Player player : server.players) {
+            for (Player player : Main.players) {
                 if (player == null)
                     continue;
                 String jsonPlayerPosition = Main.jackson.writeValueAsString(player.position);
-                server.database.UpdatePlayerPosition(player.playerName, jsonPlayerPosition);
+                Database.UpdatePlayerPosition(player.playerName, jsonPlayerPosition);
             }
 
         } catch (Exception e) {

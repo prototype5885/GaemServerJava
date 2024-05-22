@@ -102,7 +102,7 @@ public class ConfigFile {
             }
         }
 
-        // checks if each values were read successfully
+        // checks if each value were read successfully
         List<String> missingValues = new ArrayList<>();
 
         if (tcpPort != 0) {
