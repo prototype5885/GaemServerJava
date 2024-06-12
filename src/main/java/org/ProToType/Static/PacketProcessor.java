@@ -107,6 +107,7 @@ public class PacketProcessor {
             packets.add(packet);
 
             logger.trace("Separated packet, start index: {}, length: {}", currentIndex, length);
+            logger.trace(packet.json);
             currentIndex += length + 2;
             foundPackets++;
         }

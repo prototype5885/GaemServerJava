@@ -1,11 +1,20 @@
 package org.ProToType.ClassesShared;
 
 public class PlayerPosition {
+    public int i;
     public float x;
     public float y;
     public float z;
     public float rx;
     public float ry;
+
+    public int getI() {
+        return i;
+    }
+
+    public void setI(int i) {
+        this.i = i;
+    }
 
     public float getX() {
         return x;
@@ -46,4 +55,5 @@ public class PlayerPosition {
     public void setRy(float ry) {
         this.ry = ry;
     }
+
 }

@@ -94,13 +94,15 @@ public class Main {
             // loop starts from here
             long startTime = System.currentTimeMillis();
 
-            // adding a new player if somebody connected ----------------------------
+            // adding a new player if somebody connected
+            // -----------------------------------------
             while (!playersToAdd.isEmpty()) {
                 Player newPlayer = playersToAdd.poll();
                 AddPlayer(newPlayer);
             }
 
-            // processing received packets ------------------------------------
+            // processing received packets
+            // ---------------------------
             while (!packetsToProcess.isEmpty()) {
                 Packet packet = packetsToProcess.poll();
                 if (packet == null)
@@ -131,30 +133,37 @@ public class Main {
                 }
             }
 
-            // sends the positions of each player to everyone if server isn't empty ---------------------
+            // sends the positions of each player to everyone if server isn't empty
+            // --------------------------------------------------------------------
             if (playerCount != 0) {
-                List<ObjectWithID> playerPositions = new ArrayList<>();
+                List<PlayerPosition> playerPositions = new ArrayList<>();
                 for (int i = 0; i < maxPlayers; i++) {
                     if (players[i] == null)
                         continue;
 
-                    ObjectWithID playerPosition = new ObjectWithID();
+                    PlayerPosition playerPosition = new PlayerPosition();
                     playerPosition.i = i;
-                    playerPosition.o = players[i].position;
+                    playerPosition.x = players[i].position.x;
+                    playerPosition.y = players[i].position.y;
+                    playerPosition.z = players[i].position.z;
+                    playerPosition.rx = players[i].position.rx;
+                    playerPosition.ry = players[i].position.ry;
 
                     playerPositions.add(playerPosition);
                 }
                 SendToEveryone(40, playerPositions);
             }
 
-            // runs every 1 second ----------------------------------------
+            // runs every 1 second
+            // -------------------
             int secondTimerElapsedTime = (int) (System.currentTimeMillis() - oneSecondTimer);
             if (secondTimerElapsedTime >= 975) {
                 // logger.trace("secondTimerElapsedTime: " + secondTimerElapsedTime);
                 oneSecondTimer = System.currentTimeMillis();
             }
 
-            // ends the loop ---------------------------------------
+            // ends the loop
+            // -------------
             long endTime = System.currentTimeMillis();
             int elapsedTime = (int) (endTime - startTime);
             int sleepTime = 99 - elapsedTime;
